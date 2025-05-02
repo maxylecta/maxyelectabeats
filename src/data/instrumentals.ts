@@ -23,23 +23,23 @@ export const sortOptions = [
 const instrumentals: Instrumental[] = [
   {
     id: "instr-001",
-    title: "Night Rider",
+    title: "walk",
     genre: "DRILL",
-    price: 39.99,
-    audioSrc: "https://your-storage-url.com/beats/night-rider-preview.mp3",
-    bpm: 140,
-    length: "3:15",
-    dateAdded: "2023-07-15",
+    price: 24.99,
+    audioSrc: "https://maxy-electa-beats.b-cdn.net/walk.mp3",
+    bpm: 144,
+    length: "2:15",
+    dateAdded: "2025-05-02",
     isFeatured: true
   },
   {
     id: "instr-002",
-    title: "Custum",
+    title: "street corner",
     genre: "DRILL",
-    price: 44.99,
-    audioSrc: "https://your-storage-url.com/beats/tunnel-preview.mp3",
-    bpm: 145,
-    length: "3:30",
+    price: 31.99,
+    audioSrc: "https://maxy-electa-beats.b-cdn.net/street%20corner.mp3",
+    bpm: 72,
+    length: "2:30",
     dateAdded: new Date().toISOString().split('T')[0],
     isFeatured: true
   },
@@ -51,7 +51,7 @@ const instrumentals: Instrumental[] = [
     audioSrc: "https://maxy-electa-beats.b-cdn.net/tunnel.mp3",
     bpm: 99,
     length: "4:00",
-    dateAdded: "2024-01-01"
+    dateAdded: "2025-05-02"
   }
 ];
 

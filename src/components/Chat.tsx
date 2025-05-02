@@ -56,15 +56,15 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
   
   useEffect(() => {
     // Initialize or retrieve session ID
-    let existingSessionId = localStorage.getItem('chatSessionId');
+    let existingSessionId = sessionStorage.getItem('chatSessionId');
     if (!existingSessionId) {
       existingSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('chatSessionId', existingSessionId);
+      sessionStorage.setItem('chatSessionId', existingSessionId);
     }
     setSessionId(existingSessionId);
 
     // Load existing messages for this session
-    const savedMessages = localStorage.getItem(`messages_${existingSessionId}`);
+    const savedMessages = sessionStorage.getItem(`messages_${existingSessionId}`);
     if (savedMessages) {
       const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
         ...msg,
@@ -77,7 +77,7 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
   useEffect(() => {
     // Save messages whenever they change
     if (sessionId && messages.length > 0) {
-      localStorage.setItem(`messages_${sessionId}`, JSON.stringify(messages));
+      sessionStorage.setItem(`messages_${sessionId}`, JSON.stringify(messages));
     }
   }, [messages, sessionId]);
   

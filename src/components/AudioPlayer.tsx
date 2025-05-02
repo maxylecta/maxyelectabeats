@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { motion } from 'framer-motion';
 import WaveSurfer from 'wavesurfer.js';
+import { useAudio } from '../context/AudioContext';
 
 interface AudioPlayerProps {
   audioSrc: string;
@@ -14,6 +15,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioSrc, title }) => {
   const [duration, setDuration] = useState(0);
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
+  const { activePlayer, setActivePlayer } = useAudio();
 
   useEffect(() => {
     if (waveformRef.current) {
@@ -44,22 +46,46 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioSrc, title }) => {
 
       wavesurferRef.current.on('finish', () => {
         setIsPlaying(false);
+        setActivePlayer(null);
+      });
+
+      wavesurferRef.current.on('play', () => {
+        setIsPlaying(true);
+      });
+
+      wavesurferRef.current.on('pause', () => {
+        setIsPlaying(false);
       });
 
       return () => {
-        wavesurferRef.current?.destroy();
+        if (wavesurferRef.current) {
+          wavesurferRef.current.destroy();
+        }
       };
     }
-  }, [audioSrc]);
+  }, [audioSrc, setActivePlayer]);
+
+  useEffect(() => {
+    // If another player becomes active, pause this one
+    if (activePlayer && activePlayer !== wavesurferRef.current && isPlaying) {
+      setIsPlaying(false);
+      wavesurferRef.current?.pause();
+    }
+  }, [activePlayer, isPlaying]);
 
   const togglePlay = () => {
     if (wavesurferRef.current) {
       if (isPlaying) {
         wavesurferRef.current.pause();
+        setActivePlayer(null);
       } else {
+        // Pause the currently active player if it exists
+        if (activePlayer && activePlayer !== wavesurferRef.current) {
+          activePlayer.pause();
+        }
         wavesurferRef.current.play();
+        setActivePlayer(wavesurferRef.current);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
