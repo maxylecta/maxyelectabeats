@@ -82,7 +82,12 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
   }, [messages, sessionId]);
   
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current && chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: messagesEndRef.current.offsetTop,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const handleScroll = () => {
@@ -149,7 +154,7 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
       {/* Chat Messages */}
       <div 
         ref={chatContainerRef}
-        className="h-[400px] overflow-y-auto rounded-t-2xl bg-dark-900/80 backdrop-blur-sm p-6"
+        className="h-[400px] overflow-y-auto rounded-t-2xl bg-dark-900/80 backdrop-blur-sm p-6 scroll-smooth"
       >
         <AnimatePresence initial={false}>
           {messages.map(msg => (

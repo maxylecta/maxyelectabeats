@@ -20,7 +20,20 @@ const Header: React.FC = () => {
     };
   }, [scrolled]);
 
-  const toggleMenu = () => setMenuOpen(!menuOpen);
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      const headerOffset = 80; // Account for fixed header height
+      const elementPosition = section.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+    setMenuOpen(false);
+  };
 
   return (
     <header 
@@ -38,10 +51,10 @@ const Header: React.FC = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-8 items-center">
-          <NavLink href="#home">Home</NavLink>
-          <NavLink href="#beats">Beats</NavLink>
-          <NavLink href="#about">About</NavLink>
-          <NavLink href="#contact">Contact</NavLink>
+          <NavLink onClick={() => scrollToSection('home')}>Home</NavLink>
+          <NavLink onClick={() => scrollToSection('beats')}>Beats</NavLink>
+          <NavLink onClick={() => scrollToSection('about')}>About</NavLink>
+          <NavLink onClick={() => scrollToSection('contact')}>Contact</NavLink>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -53,7 +66,7 @@ const Header: React.FC = () => {
 
         {/* Mobile Menu Button */}
         <button 
-          onClick={toggleMenu} 
+          onClick={() => setMenuOpen(!menuOpen)} 
           className="md:hidden text-white"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
@@ -70,10 +83,10 @@ const Header: React.FC = () => {
           className="md:hidden bg-dark-900 absolute top-full left-0 w-full"
         >
           <div className="py-4 px-4 flex flex-col space-y-4">
-            <MobileNavLink href="#home" onClick={() => setMenuOpen(false)}>Home</MobileNavLink>
-            <MobileNavLink href="#beats" onClick={() => setMenuOpen(false)}>Beats</MobileNavLink>
-            <MobileNavLink href="#about" onClick={() => setMenuOpen(false)}>About</MobileNavLink>
-            <MobileNavLink href="#contact" onClick={() => setMenuOpen(false)}>Contact</MobileNavLink>
+            <MobileNavLink onClick={() => scrollToSection('home')}>Home</MobileNavLink>
+            <MobileNavLink onClick={() => scrollToSection('beats')}>Beats</MobileNavLink>
+            <MobileNavLink onClick={() => scrollToSection('about')}>About</MobileNavLink>
+            <MobileNavLink onClick={() => scrollToSection('contact')}>Contact</MobileNavLink>
             <button className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-300 w-full">
               Get Started
             </button>
@@ -84,27 +97,25 @@ const Header: React.FC = () => {
   );
 };
 
-const NavLink: React.FC<{ href: string; children: React.ReactNode }> = ({ href, children }) => (
-  <a 
-    href={href} 
+const NavLink: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <button 
+    onClick={onClick}
     className="text-white hover:text-primary-400 font-medium transition-colors duration-300"
   >
     {children}
-  </a>
+  </button>
 );
 
-const MobileNavLink: React.FC<{ href: string; onClick: () => void; children: React.ReactNode }> = ({ 
-  href, 
+const MobileNavLink: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ 
   onClick, 
   children 
 }) => (
-  <a 
-    href={href} 
+  <button 
     onClick={onClick}
-    className="text-white hover:text-primary-400 py-2 font-medium transition-colors duration-300 block"
+    className="text-white hover:text-primary-400 py-2 font-medium transition-colors duration-300 block w-full text-left"
   >
     {children}
-  </a>
+  </button>
 );
 
 export default Header;
