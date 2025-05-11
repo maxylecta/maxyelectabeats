@@ -15,7 +15,7 @@ interface FilterProps {
 
 const Filter: React.FC<FilterProps> = ({ options, selectedFilter, onFilterChange }) => {
   return (
-    <div className="flex flex-wrap justify-center gap-2 mb-8">
+    <div className="flex gap-2 min-w-max">
       {options.map((option) => (
         <FilterButton
           key={option.id}
@@ -42,7 +42,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({ children, active, onClick }
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className={cn(
-        "px-4 py-2 rounded-full transition-all duration-300 font-medium relative overflow-hidden",
+        "px-4 py-2 rounded-full transition-all duration-300 font-medium relative overflow-hidden whitespace-nowrap",
         active 
           ? "text-white bg-primary-500 shadow-lg shadow-primary-500/30" 
           : "text-gray-300 bg-dark-800 hover:bg-dark-700"

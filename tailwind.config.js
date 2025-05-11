@@ -100,12 +100,19 @@ export default {
       animation: {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'float': 'float 6s ease-in-out infinite',
+        'border-rotate': 'border-rotate 8s linear infinite',
+        'border-rotate-reverse': 'border-rotate 8s linear infinite reverse',
+        'border-rotate-slow': 'border-rotate 12s linear infinite',
       },
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
-        }
+        },
+        'border-rotate': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
       },
     },
   },

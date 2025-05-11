@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Music, Rocket, PenTool as Tool, Calendar, MessageCircle, Instagram } from 'lucide-react';
+import { Music, Rocket, PenTool as Tool, Calendar, MessageCircle, Instagram, Mail } from 'lucide-react';
 
 const About: React.FC = () => {
   return (
@@ -56,16 +56,25 @@ const About: React.FC = () => {
               title="Contact"
               content={
                 <div className="space-y-4">
-                  <p>For any questions, special requests, or custom projects, feel free to reach out via the contact form or through Instagram.</p>
-                  <a 
-                    href="https://instagram.com/maxyelecta" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
-                  >
-                    <Instagram className="w-5 h-5" />
-                    @maxyelecta
-                  </a>
+                  <p>For any questions, special requests, or custom projects, feel free to reach out via the contact form or through:</p>
+                  <div className="flex flex-col gap-3">
+                    <a 
+                      href="https://instagram.com/maxyelecta" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
+                    >
+                      <Instagram className="w-5 h-5" />
+                      @maxyelecta
+                    </a>
+                    <a 
+                      href="mailto:support@maxyelectabeats.com"
+                      className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
+                    >
+                      <Mail className="w-5 h-5" />
+                      support@maxyelectabeats.com
+                    </a>
+                  </div>
                 </div>
               }
             />

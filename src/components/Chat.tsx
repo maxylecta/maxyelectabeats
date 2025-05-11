@@ -150,7 +150,7 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
   };
   
   return (
-    <div className={`${className}`}>
+    <div className={`${className} h-[500px]`}>
       {/* Chat Messages */}
       <div 
         ref={chatContainerRef}

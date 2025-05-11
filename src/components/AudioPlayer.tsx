@@ -16,8 +16,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioSrc, title }) => {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const { activePlayer, setActivePlayer } = useAudio();
+  const unmountingRef = useRef(false);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     if (waveformRef.current) {
       wavesurferRef.current = WaveSurfer.create({
         container: waveformRef.current,
@@ -34,32 +37,46 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioSrc, title }) => {
         pixelRatio: 1,
       });
 
-      wavesurferRef.current.load(audioSrc);
+      wavesurferRef.current.load(audioSrc, undefined, abortController.signal);
 
       wavesurferRef.current.on('ready', () => {
-        setDuration(wavesurferRef.current?.getDuration() || 0);
+        if (!wavesurferRef.current || abortController.signal.aborted) return;
+        setDuration(wavesurferRef.current.getDuration() || 0);
       });
 
       wavesurferRef.current.on('audioprocess', () => {
-        setCurrentTime(wavesurferRef.current?.getCurrentTime() || 0);
+        if (!wavesurferRef.current || abortController.signal.aborted) return;
+        setCurrentTime(wavesurferRef.current.getCurrentTime() || 0);
       });
 
       wavesurferRef.current.on('finish', () => {
+        if (!wavesurferRef.current || abortController.signal.aborted) return;
         setIsPlaying(false);
         setActivePlayer(null);
       });
 
       wavesurferRef.current.on('play', () => {
+        if (!wavesurferRef.current || abortController.signal.aborted) return;
         setIsPlaying(true);
       });
 
       wavesurferRef.current.on('pause', () => {
+        if (!wavesurferRef.current || abortController.signal.aborted) return;
         setIsPlaying(false);
       });
 
       return () => {
-        if (wavesurferRef.current) {
-          wavesurferRef.current.destroy();
+        unmountingRef.current = true;
+        if (!abortController.signal.aborted) {
+          abortController.abort('Component unmounting');
+        }
+        if (wavesurferRef.current && wavesurferRef.current.destroy) {
+          try {
+            wavesurferRef.current.destroy();
+            wavesurferRef.current = null;
+          } catch (error) {
+            console.warn('Error cleaning up WaveSurfer:', error);
+          }
         }
       };
     }

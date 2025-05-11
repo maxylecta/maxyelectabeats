@@ -17,6 +17,11 @@ const InstrumentalShowcase: React.FC = () => {
     { id: 'DRILL MIX TRAP', label: 'DRILL MIX TRAP' },
     { id: 'TRAP', label: 'TRAP' },
     { id: 'R&B', label: 'R&B' },
+    { id: 'AFRO TRAP', label: 'AFRO TRAP' },
+    { id: 'AFRO DRILL', label: 'AFRO DRILL' },
+    { id: 'DANCEHALL', label: 'DANCEHALL' },
+    { id: 'REGGAE DANCEHALL', label: 'REGGAE DANCEHALL' },
+    { id: 'REGGAE', label: 'REGGAE' },
     { id: 'featured', label: 'Featured' },
   ];
   
@@ -107,11 +112,13 @@ const InstrumentalShowcase: React.FC = () => {
           </div>
         </div>
         
-        <Filter 
-          options={filterOptions} 
-          selectedFilter={selectedFilter} 
-          onFilterChange={setSelectedFilter} 
-        />
+        <div className="overflow-x-auto pb-4 mb-8 scrollbar-hide">
+          <Filter 
+            options={filterOptions} 
+            selectedFilter={selectedFilter} 
+            onFilterChange={setSelectedFilter} 
+          />
+        </div>
         
         {filteredInstrumentals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
