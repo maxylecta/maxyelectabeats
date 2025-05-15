@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
             <div className="flex items-center mb-4">
               <Music className="text-primary-500 h-6 w-6 mr-2" />
               <span className="font-electa text-xl font-bold bg-gradient-to-r from-primary-400 to-secondary-500 bg-clip-text text-transparent">
-                MAXY ELECTA
+                MAXY ELECTA BEATS
               </span>
             </div>
             <p className="mb-4">

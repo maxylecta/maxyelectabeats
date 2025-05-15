@@ -1,21 +1,14 @@
-import React, { createContext, useContext, useState } from 'react';
-import WaveSurfer from 'wavesurfer.js';
+import React, { createContext, useContext } from 'react';
 
 interface AudioContextType {
-  activePlayer: WaveSurfer | null;
-  setActivePlayer: (player: WaveSurfer | null) => void;
+  // Minimal context just for future extensibility
 }
 
-const AudioContext = createContext<AudioContextType>({
-  activePlayer: null,
-  setActivePlayer: () => {},
-});
+const AudioContext = createContext<AudioContextType>({});
 
 export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activePlayer, setActivePlayer] = useState<WaveSurfer | null>(null);
-
   return (
-    <AudioContext.Provider value={{ activePlayer, setActivePlayer }}>
+    <AudioContext.Provider value={{}}>
       {children}
     </AudioContext.Provider>
   );
