@@ -26,25 +26,28 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const soundRef = useRef<Howl | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationFrameRef = useRef<number>();
+  const progressIntervalRef = useRef<number>();
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceNodeRef = useRef<MediaElementSourceNode | null>(null);
-  const animationFrameRef = useRef<number>();
-  const frequencyDataRef = useRef<Uint8Array | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const particlesRef = useRef<Array<{ x: number; y: number; vx: number; vy: number; life: number; size: number; }>>([]);
 
-  const getDirectDownloadUrl = async (url: string): Promise<string | null> => {
-    try {
-      const fileId = url.match(/\/d\/(.+?)\/view/)?.[1];
-      if (!fileId) {
-        console.error('Invalid Google Drive URL format');
-        return null;
-      }
-      return `https://drive.google.com/uc?export=download&id=${fileId}`;
-    } catch (error) {
-      console.error('Error accessing Google Drive file:', error);
-      return null;
+  const startProgressUpdate = () => {
+    if (!soundRef.current) return;
+    progressIntervalRef.current = window.setInterval(() => {
+      const seek = soundRef.current?.seek() || 0;
+      const duration = soundRef.current?.duration() || 0;
+      setProgress((seek / duration) * 100);
+    }, 100);
+  };
+
+  const stopProgressUpdate = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
     }
   };
 
@@ -55,315 +58,374 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       soundRef.current.unload();
     }
 
-    if (!audioUrl) {
-      setLoadError('No audio URL provided');
-      return;
-    }
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+        analyserRef.current.smoothingTimeConstant = 0.8;
+      }
 
-    const initializeAudio = async () => {
-      try {
-        const directUrl = audioUrl.includes('drive.google.com') 
-          ? await getDirectDownloadUrl(audioUrl) 
-          : audioUrl;
-
-        if (!directUrl) {
-          setLoadError('Unable to access audio file');
-          return;
-        }
-
-        soundRef.current = new Howl({
-          src: [directUrl],
-          html5: true,
-          format: ['mp3'],
-          preload: true,
-          onload: () => {
-            setLoadError(null);
-            // Only call setupAudioAnalyser when both references are available
-            if (soundRef.current?.audioNode && canvasRef.current) {
-              setupAudioAnalyser();
-            }
-          },
-          onplay: () => {
-            setIsPlaying(true);
-            if (analyserRef.current && canvasRef.current) {
-              draw();
-            }
-          },
-          onpause: () => {
-            setIsPlaying(false);
-            if (animationFrameRef.current) {
-              cancelAnimationFrame(animationFrameRef.current);
-            }
-          },
-          onstop: () => {
-            setIsPlaying(false);
-            if (animationFrameRef.current) {
-              cancelAnimationFrame(animationFrameRef.current);
-            }
-          },
-          onloaderror: () => {
-            setLoadError('Failed to load audio');
-            setIsPlaying(false);
-          },
-          onplayerror: () => {
-            if (soundRef.current) {
-              soundRef.current.once('unlock', () => {
-                soundRef.current?.play();
-              });
+      soundRef.current = new Howl({
+        src: [audioUrl],
+        html5: true,
+        format: ['mp3'],
+        preload: true,
+        onload: () => {
+          setLoadError(null);
+          
+          if (audioContextRef.current && analyserRef.current) {
+            const audio = (soundRef.current as any)._sounds[0]._node;
+            if (!sourceNodeRef.current) {
+              sourceNodeRef.current = audioContextRef.current.createMediaElementSource(audio);
+              sourceNodeRef.current.connect(analyserRef.current);
+              analyserRef.current.connect(audioContextRef.current.destination);
             }
           }
-        });
-      } catch (error) {
-        console.error('Error initializing audio:', error);
-        setLoadError('Failed to initialize audio player');
-      }
-    };
-
-    initializeAudio();
+        },
+        onplay: () => {
+          setIsPlaying(true);
+          startProgressUpdate();
+          if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume();
+          }
+        },
+        onpause: () => {
+          setIsPlaying(false);
+          stopProgressUpdate();
+        },
+        onstop: () => {
+          setIsPlaying(false);
+          stopProgressUpdate();
+        },
+        onend: () => {
+          setIsPlaying(false);
+          setProgress(0);
+          stopProgressUpdate();
+        },
+        onloaderror: () => {
+          setLoadError('Failed to load audio');
+          setIsPlaying(false);
+        }
+      });
+    } catch (error) {
+      console.error('Error initializing audio:', error);
+      setLoadError('Failed to initialize audio');
+    }
 
     return () => {
       if (soundRef.current) {
         soundRef.current.unload();
       }
+      stopProgressUpdate();
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-      if (sourceNodeRef.current) {
-        sourceNodeRef.current.disconnect();
-      }
-      if (analyserRef.current) {
-        analyserRef.current.disconnect();
       }
     };
   }, [audioUrl]);
 
-  const setupAudioAnalyser = () => {
-    if (!soundRef.current?.audioNode || !canvasRef.current) {
-      console.error('Missing sound or canvas reference');
-      return;
-    }
-
-    try {
-      // Clean up existing audio context and nodes
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-      if (sourceNodeRef.current) {
-        sourceNodeRef.current.disconnect();
-      }
-      if (analyserRef.current) {
-        analyserRef.current.disconnect();
-      }
-
-      // Create new audio context and nodes
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      sourceNodeRef.current = audioContextRef.current.createMediaElementSource(soundRef.current.audioNode);
-
-      // Configure analyser
-      analyserRef.current.fftSize = 128;
-      analyserRef.current.smoothingTimeConstant = 0.8;
-
-      // Connect nodes
-      sourceNodeRef.current.connect(analyserRef.current);
-      analyserRef.current.connect(audioContextRef.current.destination);
-
-      // Initialize frequency data array
-      frequencyDataRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
-
-      // Set up canvas
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Set canvas dimensions with high DPI support
-      const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-
-      // Draw test bars to verify canvas is working
-      ctx.fillStyle = '#00f6ff';
-      const barWidth = 4;
-      const barSpacing = 2;
-      const totalBars = 20;
-      
-      for (let i = 0; i < totalBars; i++) {
-        const barHeight = 50;
-        ctx.fillRect(
-          i * (barWidth + barSpacing),
-          canvas.height / dpr - barHeight,
-          barWidth,
-          barHeight
-        );
-      }
-    } catch (error) {
-      console.error('Error setting up audio analyser:', error);
-    }
-  };
-
-  const draw = () => {
-    if (!analyserRef.current || !canvasRef.current || !frequencyDataRef.current) return;
-
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const width = canvas.width / dpr;
-    const height = canvas.height / dpr;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    ctx.scale(dpr, dpr);
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
 
-    // Clear canvas
-    ctx.fillStyle = '#111111';
-    ctx.fillRect(0, 0, width, height);
-
-    // Create gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, '#00f6ff');
-    gradient.addColorStop(1, '#0066ff');
-
-    // Set up shadow for glow effect
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#00f6ff';
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-
-    // Get frequency data
-    analyserRef.current.getByteFrequencyData(frequencyDataRef.current);
-
-    // Calculate bar dimensions
-    const barWidth = 4;
-    const barSpacing = 2;
-    const totalBars = Math.min(64, Math.floor(width / (barWidth + barSpacing)));
-    const scaleFactor = 2.5;
-
-    // Draw bars
-    for (let i = 0; i < totalBars; i++) {
-      const index = Math.floor(i * frequencyDataRef.current.length / totalBars);
-      const value = frequencyDataRef.current[index];
-      const barHeight = (value / 255) * height * scaleFactor;
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(
-        i * (barWidth + barSpacing),
-        height - barHeight,
-        barWidth,
-        barHeight
-      );
+    // Initialize electric particles
+    if (particlesRef.current.length === 0) {
+      for (let i = 0; i < 30; i++) {
+        particlesRef.current.push({
+          x: Math.random() * rect.width,
+          y: Math.random() * rect.height,
+          vx: (Math.random() - 0.5) * 3,
+          vy: (Math.random() - 0.5) * 3,
+          life: Math.random(),
+          size: Math.random() * 3 + 1
+        });
+      }
     }
 
-    animationFrameRef.current = requestAnimationFrame(draw);
-  };
+    const drawLightning = (startX: number, startY: number, endX: number, endY: number, displace: number, detail: number = 0) => {
+      if (displace < detail) {
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        return;
+      }
+      
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2;
+      const offsetX = (Math.random() - 0.5) * displace * 2;
+      const offsetY = (Math.random() - 0.5) * displace;
+      
+      drawLightning(startX, startY, midX + offsetX, midY + offsetY, displace / 2, detail);
+      drawLightning(midX + offsetX, midY + offsetY, endX, endY, displace / 2, detail);
+    };
+
+    const drawEnergyRing = (x: number, y: number, radius: number, intensity: number) => {
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      gradient.addColorStop(0, `rgba(0, 246, 255, ${intensity * 0.5})`);
+      gradient.addColorStop(0.5, `rgba(0, 162, 255, ${intensity * 0.3})`);
+      gradient.addColorStop(1, 'rgba(0, 102, 255, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const animate = () => {
+      if (!canvas || !ctx) return;
+      
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const time = Date.now() / 1000;
+
+      if (isPlaying && analyserRef.current) {
+        // Spectrum visualization
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        const barWidth = (rect.width / bufferLength) * 2.5;
+        const barSpacing = 2;
+        let x = 0;
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(0, 162, 255, 0.7)';
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (dataArray[i] / 255) * (rect.height * 0.8);
+          
+          const gradient = ctx.createLinearGradient(0, rect.height - barHeight, 0, rect.height);
+          gradient.addColorStop(0, 'rgba(0, 246, 255, 0.95)');
+          gradient.addColorStop(0.5, 'rgba(0, 162, 255, 0.8)');
+          gradient.addColorStop(1, 'rgba(0, 102, 255, 0.6)');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.roundRect(x, rect.height - barHeight, barWidth - barSpacing, barHeight, 3);
+          ctx.fill();
+          
+          x += barWidth;
+        }
+      } else {
+        // Electric ambient animation
+        ctx.globalCompositeOperation = 'source-over';
+        
+        // Draw energy core
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const pulseIntensity = (Math.sin(time * 2) + 1) / 2;
+        
+        drawEnergyRing(centerX, centerY, 60 + pulseIntensity * 20, 0.8);
+        
+        // Draw electric particles
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(0, 162, 255, 0.5)';
+        
+        particlesRef.current.forEach((particle, i) => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.life = Math.sin(time * 2 + i) * 0.5 + 0.5;
+          
+          if (particle.x < 0 || particle.x > rect.width) particle.vx *= -1;
+          if (particle.y < 0 || particle.y > rect.height) particle.vy *= -1;
+          
+          const gradient = ctx.createRadialGradient(
+            particle.x, particle.y, 0,
+            particle.x, particle.y, particle.size * 2
+          );
+          gradient.addColorStop(0, `rgba(0, 246, 255, ${particle.life * 0.8})`);
+          gradient.addColorStop(1, 'rgba(0, 102, 255, 0)');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Draw lightning bolts
+        if (Math.random() < 0.05) {
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(0, 246, 255, 0.8)';
+          ctx.lineWidth = 2;
+          ctx.shadowBlur = 30;
+          ctx.shadowColor = 'rgba(0, 162, 255, 0.8)';
+          
+          const startX = Math.random() * rect.width;
+          const startY = 0;
+          const endX = Math.random() * rect.width;
+          const endY = rect.height;
+          
+          drawLightning(startX, startY, endX, endY, 50, 5);
+          ctx.stroke();
+        }
+
+        // Draw energy waves
+        const numWaves = 3;
+        for (let i = 0; i < numWaves; i++) {
+          const radius = (100 + i * 50) * (1 + Math.sin(time * 2 + i) * 0.2);
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(0, 162, 255, ${0.2 - (i * 0.05)})`;
+          ctx.lineWidth = 2;
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPlaying]);
 
   const togglePlay = () => {
     if (!soundRef.current || loadError) return;
-    if (isPlaying) {
-      soundRef.current.pause();
-    } else {
-      soundRef.current.play();
+    
+    try {
+      if (isPlaying) {
+        soundRef.current.pause();
+      } else {
+        if (audioContextRef.current?.state === 'suspended') {
+          audioContextRef.current.resume();
+        }
+        soundRef.current.play();
+      }
+    } catch (error) {
+      console.error('Error toggling playback:', error);
+      setLoadError('Playback error occurred');
     }
   };
 
-  const genreColors: Record<string, string> = {
-    'DRILL': 'bg-primary-500',
-    'DRILL MIX TRAP': 'bg-secondary-500',
-    'TRAP': 'bg-accent-500',
-    'R&B': 'bg-purple-500',
-  };
-
   return (
-    <div className="bg-dark-800/90 backdrop-blur-sm rounded-lg p-2 hover:bg-dark-800 transition-colors duration-300">
-      <div className="flex items-center gap-2">
-        <motion.button
-          whileHover={{ scale: loadError ? 1 : 1.1 }}
-          whileTap={{ scale: loadError ? 1 : 0.9 }}
-          onClick={togglePlay}
-          disabled={!!loadError}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-white transition-colors duration-300 flex-shrink-0 ${
-            loadError 
-              ? 'bg-red-500 cursor-not-allowed' 
-              : 'bg-primary-500 hover:bg-primary-600'
-          }`}
-        >
-          {loadError ? <AlertCircle size={14} /> : isPlaying ? <Pause size={14} /> : <Play size={14} />}
-        </motion.button>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm text-white font-medium truncate">{title}</h3>
-            {isNew && (
-              <span className="bg-primary-500 text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0">
-                New
-              </span>
-            )}
-            {isFeatured && (
-              <span className="bg-accent-500 text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0">
-                Featured
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className={`${genreColors[genre]} px-1.5 py-0.5 rounded-full text-white`}>
-              {genre}
-            </span>
-            <span className="text-gray-400">{bpm} BPM</span>
-            <span className="text-gray-400">{duration}</span>
-            {loadError && (
-              <span className="text-red-400 truncate" title={loadError}>
-                {loadError}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="text-base font-bold text-primary-400">${price.toFixed(2)}</div>
-
-          <div className="flex gap-1">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-primary-500 hover:bg-primary-600 text-white p-1.5 rounded-lg transition-colors duration-300"
-            >
-              <ShoppingCart size={14} />
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-dark-700 hover:bg-dark-600 text-white p-1.5 rounded-lg transition-colors duration-300"
-            >
-              <Download size={14} />
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {isPlaying && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-2 overflow-hidden"
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-dark-800/90 backdrop-blur-sm rounded-xl overflow-hidden border border-dark-700/50 hover:border-dark-600/50 transition-all duration-300"
+    >
+      <div className="p-6">
+        {/* Header Section */}
+        <div className="flex items-center gap-4">
+          <motion.button
+            whileHover={{ scale: loadError ? 1 : 1.1 }}
+            whileTap={{ scale: loadError ? 1 : 0.9 }}
+            onClick={togglePlay}
+            disabled={!!loadError}
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-300 ${
+              loadError 
+                ? 'bg-red-500 cursor-not-allowed' 
+                : 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/30'
+            }`}
           >
-            <canvas 
-              ref={canvasRef}
-              className="w-full h-12 rounded-lg"
-              style={{ 
-                imageRendering: 'pixelated',
-                background: '#111111'
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            {loadError ? <AlertCircle size={24} /> : isPlaying ? <Pause size={24} /> : <Play size={24} />}
+          </motion.button>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="overflow-hidden">
+                <motion.h3 
+                  className="text-xl font-semibold text-white whitespace-nowrap"
+                  animate={{
+                    x: title.length > 20 ? [0, -(title.length * 8) + 200, 0] : 0
+                  }}
+                  transition={{
+                    duration: title.length > 20 ? 8 : 0,
+                    repeat: Infinity,
+                    repeatDelay: 1,
+                    ease: "linear"
+                  }}
+                >
+                  {title}
+                </motion.h3>
+              </div>
+              {isNew && (
+                <span className="bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                  New
+                </span>
+              )}
+              {isFeatured && (
+                <span className="bg-accent-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                  Featured
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-sm text-gray-400">
+              <span className="bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded-full font-medium">
+                {genre}
+              </span>
+              <span>{bpm} BPM</span>
+              <span>{duration}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold text-primary-400">${price.toFixed(2)}</span>
+            <div className="flex gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-primary-500 hover:bg-primary-600 text-white p-3 rounded-xl transition-colors duration-300 shadow-lg shadow-primary-500/20"
+              >
+                <ShoppingCart size={20} />
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-dark-700 hover:bg-dark-600 text-white p-3 rounded-xl transition-colors duration-300"
+              >
+                <Download size={20} />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
+        {/* Expanded Section with Progress and Canvas */}
+        <AnimatePresence>
+          {isPlaying && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-6 overflow-hidden"
+            >
+              {/* Progress Bar */}
+              <div className="h-1 bg-dark-700 rounded-full overflow-hidden mb-4">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-primary-500 to-secondary-500"
+                  style={{ width: `${progress}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.1 }}
+                />
+              </div>
+
+              {/* Canvas Visualization */}
+              <canvas 
+                ref={canvasRef}
+                className="w-full h-24 rounded-xl bg-dark-900/50 spectrum-canvas"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 };
 

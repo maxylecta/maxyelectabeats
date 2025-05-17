@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import AudioPlayer from './AudioPlayer';
+import InstrumentalCard from './InstrumentalCard';
+import ElectricCanvas from './ElectricCanvas';
+import SearchBar from './SearchBar';
 import instrumentals from '../data/instrumentals';
 
 const InstrumentalShowcase: React.FC = () => {
-  const isNew = (dateAdded: string) => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return new Date(dateAdded) > thirtyDaysAgo;
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const filteredInstrumentals = useMemo(() => {
+    return instrumentals.filter(instrumental => {
+      const matchesSearch = 
+        instrumental.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        instrumental.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        instrumental.bpm.toString().includes(searchQuery);
+
+      const matchesFilter = 
+        selectedFilter === 'all' ||
+        (selectedFilter === 'featured' && instrumental.isFeatured) ||
+        instrumental.genre === selectedFilter;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [searchQuery, selectedFilter]);
 
   return (
     <section id="beats" className="py-16">
@@ -17,30 +32,50 @@ const InstrumentalShowcase: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-8"
+          className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary-400 to-secondary-500 bg-clip-text text-transparent">
-            Featured Beats
+            Browse Our Beats
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Professional instrumentals ready for your next hit. All beats are mixed and mastered to industry standards.
+          <p className="text-gray-400 max-w-2xl mx-auto mb-8">
+            Find the perfect sound for your next project. All instrumentals are professionally mixed and mastered.
           </p>
+          
+          {/* Electric Canvas Animation */}
+          <div className="mb-12">
+            <ElectricCanvas />
+          </div>
+
+          {/* Search and Filter */}
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onFilterChange={setSelectedFilter}
+            selectedFilter={selectedFilter}
+          />
         </motion.div>
 
-        <div className="grid gap-2">
-          {instrumentals.map((instrumental) => (
-            <AudioPlayer
-              key={instrumental.id}
-              title={instrumental.title}
-              genre={instrumental.genre}
-              bpm={instrumental.bpm}
-              price={instrumental.price}
-              audioUrl={instrumental.audioSrc}
-              duration={instrumental.length}
-              isNew={isNew(instrumental.dateAdded)}
-              isFeatured={instrumental.isFeatured}
-            />
-          ))}
+        {/* Results */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredInstrumentals.length > 0 ? (
+            filteredInstrumentals.map((instrumental) => (
+              <InstrumentalCard
+                key={instrumental.id}
+                title={instrumental.title}
+                genre={instrumental.genre}
+                bpm={instrumental.bpm}
+                price={instrumental.price}
+                audioUrl={instrumental.audioSrc}
+                duration={instrumental.length}
+                isNew={new Date(instrumental.dateAdded) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                isFeatured={instrumental.isFeatured}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-400 text-lg">No beats found matching your search criteria.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

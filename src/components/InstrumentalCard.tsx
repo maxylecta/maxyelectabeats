@@ -1,117 +1,250 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Download, ShoppingCart, Clock, Music, Sparkles } from 'lucide-react';
-import { Instrumental } from '../data/instrumentals';
-import AudioPlayer from './AudioPlayer';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, Download, ShoppingCart, AlertCircle } from 'lucide-react';
+import AudioWaveform from './AudioWaveform';
 
 interface InstrumentalCardProps {
-  instrumental: Instrumental;
+  title: string;
+  genre: string;
+  bpm: number;
+  price: number;
+  audioUrl: string;
+  duration: string;
+  isNew?: boolean;
+  isFeatured?: boolean;
 }
 
-const InstrumentalCard: React.FC<InstrumentalCardProps> = ({ instrumental }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const genreColors = {
-    'DRILL': 'bg-primary-500',
-    'DRILL MIX TRAP': 'bg-secondary-500',
-    'TRAP': 'bg-accent-500',
-    'R&B': 'bg-purple-500'
+const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
+  title,
+  genre,
+  bpm,
+  price,
+  audioUrl,
+  duration,
+  isNew,
+  isFeatured,
+}) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState('00:00');
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const isNew = () => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return new Date(instrumental.dateAdded) > thirtyDaysAgo;
+  useEffect(() => {
+    // Initialize audio context and element
+    if (!audioRef.current) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.preload = 'metadata';
+      audioRef.current.volume = 1;
+    }
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+
+    const audio = audioRef.current;
+    const audioContext = audioContextRef.current;
+
+    const handleTimeUpdate = () => {
+      if (audio) {
+        setCurrentTime(formatTime(audio.currentTime));
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime('00:00');
+      setProgress(0);
+      if (audio) audio.currentTime = 0;
+    };
+
+    const handleError = () => {
+      console.error('Audio loading error');
+      setLoadError('Failed to load audio');
+      setIsPlaying(false);
+    };
+
+    // Connect audio to context
+    if (audioContext && audio && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Set up event listeners
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      
+      if (isPlaying) {
+        audio.pause();
+      }
+    };
+  }, [audioUrl]);
+
+  const togglePlay = async () => {
+    if (!audioRef.current || loadError) return;
+
+    try {
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        // Stop all other audio elements
+        document.querySelectorAll('audio').forEach(audio => {
+          if (audio !== audioRef.current) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+        });
+
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error toggling playback:', error);
+      setLoadError('Playback error occurred');
+    }
   };
-  
+
+  const handleSeek = (percentage: number) => {
+    if (!audioRef.current) return;
+    
+    const newTime = (percentage / 100) * audioRef.current.duration;
+    audioRef.current.currentTime = newTime;
+    setProgress(percentage);
+    
+    if (!isPlaying) {
+      togglePlay();
+    }
+  };
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="relative bg-dark-800 rounded-xl overflow-hidden shadow-lg shadow-black/30 transition-all duration-300"
-      style={{
-        boxShadow: isHovered ? '0 0 30px rgba(0, 102, 255, 0.2)' : undefined
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <AnimatePresence>
       <motion.div 
-        animate={{
-          scale: isHovered ? 1.02 : 1,
-          brightness: isHovered ? 1.1 : 1
+        initial={false}
+        animate={isPlaying ? {
+          boxShadow: [
+            '0 0 0 rgba(0, 102, 255, 0)',
+            '0 0 20px rgba(0, 102, 255, 0.2)',
+            '0 0 30px rgba(0, 102, 255, 0.1)'
+          ],
+          scale: 1.01
+        } : {
+          boxShadow: '0 0 0 rgba(0, 102, 255, 0)',
+          scale: 1
         }}
         transition={{ duration: 0.3 }}
-        className="p-6 relative"
+        className="bg-dark-900/90 backdrop-blur-sm rounded-xl overflow-hidden border border-dark-800/50 relative"
       >
-        {instrumental.isFeatured && (
-          <div className="absolute top-3 right-3 bg-accent-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Featured
-          </div>
+        {isPlaying && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 rounded-xl"
+            style={{
+              background: 'linear-gradient(180deg, rgba(0, 102, 255, 0.03) 0%, rgba(0, 102, 255, 0) 100%)',
+              border: '1px solid rgba(0, 102, 255, 0.1)',
+              boxShadow: 'inset 0 0 30px rgba(0, 102, 255, 0.05)'
+            }}
+          />
         )}
         
-        {isNew() && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute top-3 left-3 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"
-          >
-            <Sparkles size={12} />
-            New
-          </motion.div>
-        )}
-        
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-xl font-bold text-white mb-1">{instrumental.title}</h3>
-            <span className={`${genreColors[instrumental.genre]} px-2 py-1 rounded-full text-xs font-semibold`}>
-              {instrumental.genre}
-            </span>
+        <div className="p-6 relative">
+          {/* Header with tags and price */}
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex gap-2">
+              {isNew && (
+                <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                  New
+                </span>
+              )}
+              {isFeatured && (
+                <span className="bg-accent-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                  Featured
+                </span>
+              )}
+            </div>
+            <span className="text-2xl font-bold text-primary-400">${price.toFixed(2)}</span>
           </div>
-          <div className="text-2xl font-electa text-primary-300">${instrumental.price.toFixed(2)}</div>
+
+          {/* Title and Info */}
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="bg-primary-500/20 text-primary-400 px-2 py-1 rounded-full font-medium">
+                {genre}
+              </span>
+              <span className="text-gray-400">{bpm} BPM</span>
+              <span className="text-gray-400">{currentTime} / {duration}</span>
+            </div>
+          </div>
+
+          {/* Waveform */}
+          <div className="mb-4">
+            <AudioWaveform 
+              audioUrl={audioUrl}
+              width={550}
+              height={64}
+              progress={progress}
+              onSeek={handleSeek}
+            />
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-4 mb-4">
+            <motion.button
+              whileHover={{ scale: loadError ? 1 : 1.05 }}
+              whileTap={{ scale: loadError ? 1 : 0.95 }}
+              onClick={togglePlay}
+              disabled={!!loadError}
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-300 ${
+                loadError 
+                  ? 'bg-red-500 cursor-not-allowed' 
+                  : 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/30'
+              }`}
+            >
+              {loadError ? <AlertCircle size={20} /> : isPlaying ? <Pause size={20} /> : <Play size={20} />}
+            </motion.button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
+            >
+              <ShoppingCart size={20} />
+              Buy Now
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-dark-800 hover:bg-dark-700 text-white p-3 rounded-xl transition-all duration-300"
+            >
+              <Download size={20} />
+            </motion.button>
+          </div>
         </div>
-        
-        <div className="flex items-center justify-between mb-4 text-sm text-gray-400">
-          <div className="flex items-center gap-1">
-            <Music size={16} />
-            <span>{instrumental.bpm} BPM</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock size={16} />
-            <span>{instrumental.length}</span>
-          </div>
-        </div>
-        
-        <AudioPlayer 
-          audioSrc={instrumental.audioSrc} 
-          title={instrumental.title} 
-        />
-        
-        <motion.div 
-          className="mt-4 flex gap-2"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: isHovered ? 1 : 0.7, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-primary-500 hover:bg-primary-600 text-white flex-1 py-2 rounded-lg font-medium transition-colors duration-300 flex items-center justify-center"
-          >
-            <ShoppingCart size={18} className="mr-2" />
-            Buy Now
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-dark-700 hover:bg-dark-600 text-white px-3 py-2 rounded-lg font-medium transition-colors duration-300"
-          >
-            <Download size={18} />
-          </motion.button>
-        </motion.div>
       </motion.div>
-    </motion.div>
+    </AnimatePresence>
   );
 };
 

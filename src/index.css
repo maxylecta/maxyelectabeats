@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes titleScroll {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(0); }
+  90% { transform: translateX(calc(-100% + 300px)); }
+  100% { transform: translateX(calc(-100% + 300px)); }
+}
+
+.title-container {
+  position: relative;
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10px,
+    black calc(100% - 50px),
+    transparent
+  );
+}
+
+.scrolling-title {
+  white-space: nowrap;
+  display: inline-block;
+  padding-right: 50px;
+}
+
+.scrolling-title.animate {
+  animation: titleScroll 15s linear infinite;
+}
+
+@keyframes spectrumGlow {
+  0% { filter: drop-shadow(0 0 5px rgba(0, 102, 255, 0.5)); }
+  50% { filter: drop-shadow(0 0 15px rgba(0, 102, 255, 0.7)); }
+  100% { filter: drop-shadow(0 0 5px rgba(0, 102, 255, 0.5)); }
+}
+
+.spectrum-canvas {
+  filter: drop-shadow(0 0 10px rgba(0, 102, 255, 0.6));
+  animation: spectrumGlow 3s ease-in-out infinite;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
