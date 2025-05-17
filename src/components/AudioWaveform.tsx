@@ -19,7 +19,10 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
 }) => {
   const [svgPath, setSvgPath] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const waveformDataRef = useRef<number[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
     if (!onSeek || !svgRef.current) return;
@@ -30,16 +33,68 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
     onSeek(Math.max(0, Math.min(100, percentage)));
   };
 
-  useEffect(() => {
-    let isMounted = true;
+  // Generate SVG path from waveform data
+  const generateSVGPath = (normalizedWaveform: number[]) => {
+    const maxBarHeight = height - 8;
+    let svg = '';
+    
+    // Background (non-played) waveform
+    normalizedWaveform.forEach((v, i) => {
+      const barHeight = Math.max(4, v * maxBarHeight);
+      const x = i;
+      const y = (height - barHeight) / 2;
+      svg += `<rect x="${x}" y="${y}" width="1" height="${barHeight}" rx="0.5" fill="rgba(255,255,255,0.1)" />`;
+    });
 
-    const generateWaveform = async () => {
+    // Foreground (played) waveform with gradient
+    svg += `<defs>
+      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#0066ff" />
+        <stop offset="100%" style="stop-color:#00b8ff" />
+      </linearGradient>
+    </defs>`;
+
+    normalizedWaveform.forEach((v, i) => {
+      if (i <= (width * (progress / 100))) {
+        const barHeight = Math.max(4, v * maxBarHeight);
+        const x = i;
+        const y = (height - barHeight) / 2;
+        svg += `<rect x="${x}" y="${y}" width="1" height="${barHeight}" rx="0.5" fill="url(#progressGradient)" />`;
+      }
+    });
+
+    return svg;
+  };
+
+  // Load and process audio data
+  useEffect(() => {
+    const processAudio = async () => {
       try {
-        const res = await fetch(audioUrl);
+        setIsLoading(true);
+        setError(null);
+
+        // Cancel any previous fetch request
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+
+        abortControllerRef.current = new AbortController();
+
+        const res = await fetch(audioUrl, {
+          signal: abortControllerRef.current.signal,
+          headers: {
+            'Range': 'bytes=0-1000000' // Request first 1MB only for waveform
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const arrayBuffer = await res.arrayBuffer();
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
+        
         const rawData = audioBuffer.getChannelData(0);
         const samples = width;
         const blockSize = Math.floor(rawData.length / samples);
@@ -56,53 +111,53 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
         // Normalize waveform data
         const multiplier = Math.pow(Math.max(...waveform), -1);
         const normalizedWaveform = waveform.map(n => n * multiplier);
-
-        const maxBarHeight = height - 8;
-        let svg = '';
         
-        // Background (non-played) waveform
-        normalizedWaveform.forEach((v, i) => {
-          const barHeight = Math.max(4, v * maxBarHeight);
-          const x = i;
-          const y = (height - barHeight) / 2;
-          svg += `<rect x="${x}" y="${y}" width="1" height="${barHeight}" rx="0.5" fill="rgba(255,255,255,0.1)" />`;
-        });
-
-        // Foreground (played) waveform with gradient
-        svg += `<defs>
-          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#0066ff" />
-            <stop offset="100%" style="stop-color:#00b8ff" />
-          </linearGradient>
-        </defs>`;
-
-        normalizedWaveform.forEach((v, i) => {
-          if (i <= (width * (progress / 100))) {
-            const barHeight = Math.max(4, v * maxBarHeight);
-            const x = i;
-            const y = (height - barHeight) / 2;
-            svg += `<rect x="${x}" y="${y}" width="1" height="${barHeight}" rx="0.5" fill="url(#progressGradient)" />`;
-          }
-        });
-
-        if (isMounted) {
-          setSvgPath(svg);
-          setIsLoading(false);
-        }
+        // Store waveform data for reuse
+        waveformDataRef.current = normalizedWaveform;
+        
+        // Generate initial SVG
+        const svg = generateSVGPath(normalizedWaveform);
+        setSvgPath(svg);
+        setIsLoading(false);
+        
       } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
         console.error('Error generating waveform:', error);
+        setError('Failed to load waveform');
         setIsLoading(false);
       }
     };
 
-    generateWaveform();
+    processAudio();
 
-    return () => { isMounted = false; };
-  }, [audioUrl, width, height, color, progress]);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [audioUrl, width, height]);
+
+  // Update SVG when progress changes
+  useEffect(() => {
+    if (waveformDataRef.current.length > 0) {
+      const svg = generateSVGPath(waveformDataRef.current);
+      setSvgPath(svg);
+    }
+  }, [progress, height]);
 
   if (isLoading) {
     return (
       <div className="w-full h-12 bg-dark-800/50 rounded-lg animate-pulse" />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-12 bg-dark-800/50 rounded-lg flex items-center justify-center text-red-500">
+        {error}
+      </div>
     );
   }
 

@@ -28,6 +28,7 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   const [currentTime, setCurrentTime] = useState('00:00');
   const [loadError, setLoadError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -38,46 +39,71 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   };
 
   useEffect(() => {
-    // Initialize audio context and element
-    if (!audioRef.current) {
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.preload = 'metadata';
-      audioRef.current.volume = 1;
-    }
+    const initializeAudio = async () => {
+      try {
+        setIsLoading(true);
+        setLoadError(null);
 
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+          audioRef.current.preload = 'metadata';
+          audioRef.current.volume = 1;
+        }
 
+        // Reset audio element
+        const audio = audioRef.current;
+        audio.src = audioUrl;
+        
+        // Wait for metadata to load
+        await new Promise((resolve, reject) => {
+          audio.addEventListener('loadedmetadata', resolve, { once: true });
+          audio.addEventListener('error', reject, { once: true });
+        });
+
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error initializing audio:', error);
+        setLoadError('Failed to load audio');
+        setIsLoading(false);
+      }
+    };
+
+    initializeAudio();
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, [audioUrl]);
+
+  useEffect(() => {
     const audio = audioRef.current;
-    const audioContext = audioContextRef.current;
+    if (!audio) return;
 
     const handleTimeUpdate = () => {
-      if (audio) {
-        setCurrentTime(formatTime(audio.currentTime));
-        setProgress((audio.currentTime / audio.duration) * 100);
-      }
+      setCurrentTime(formatTime(audio.currentTime));
+      setProgress((audio.currentTime / audio.duration) * 100);
     };
 
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime('00:00');
       setProgress(0);
-      if (audio) audio.currentTime = 0;
+      audio.currentTime = 0;
     };
 
     const handleError = () => {
-      console.error('Audio loading error');
-      setLoadError('Failed to load audio');
+      console.error('Audio playback error');
+      setLoadError('Playback error occurred');
       setIsPlaying(false);
     };
 
-    // Connect audio to context
-    if (audioContext && audio && audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    // Set up event listeners
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
@@ -86,15 +112,11 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
-      
-      if (isPlaying) {
-        audio.pause();
-      }
     };
-  }, [audioUrl]);
+  }, []);
 
   const togglePlay = async () => {
-    if (!audioRef.current || loadError) return;
+    if (!audioRef.current || loadError || isLoading) return;
 
     try {
       if (audioContextRef.current?.state === 'suspended') {
@@ -123,7 +145,7 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   };
 
   const handleSeek = (percentage: number) => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || isLoading) return;
     
     const newTime = (percentage / 100) * audioRef.current.duration;
     audioRef.current.currentTime = newTime;
@@ -210,17 +232,31 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
           {/* Controls */}
           <div className="flex items-center gap-4 mb-4">
             <motion.button
-              whileHover={{ scale: loadError ? 1 : 1.05 }}
-              whileTap={{ scale: loadError ? 1 : 0.95 }}
+              whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
+              whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
               onClick={togglePlay}
-              disabled={!!loadError}
+              disabled={!!loadError || isLoading}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-300 ${
                 loadError 
-                  ? 'bg-red-500 cursor-not-allowed' 
+                  ? 'bg-red-500 cursor-not-allowed'
+                  : isLoading
+                  ? 'bg-gray-500 cursor-wait'
                   : 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/30'
               }`}
             >
-              {loadError ? <AlertCircle size={20} /> : isPlaying ? <Pause size={20} /> : <Play size={20} />}
+              {loadError ? (
+                <AlertCircle size={20} />
+              ) : isLoading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                />
+              ) : isPlaying ? (
+                <Pause size={20} />
+              ) : (
+                <Play size={20} />
+              )}
             </motion.button>
           </div>
 
