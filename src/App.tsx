@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import InstrumentalShowcase from './components/InstrumentalShowcase';
@@ -7,11 +7,32 @@ import Hero from './components/Hero';
 import About from './components/About';
 import { AudioProvider } from './context/AudioContext';
 import { MessageCircle } from 'lucide-react';
+import { useThemeStore } from './store/themeStore';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
+  const { isDarkMode } = useThemeStore();
+
+  useEffect(() => {
+    document.body.className = isDarkMode ? 'bg-black' : 'bg-gray-50';
+  }, [isDarkMode]);
+
   return (
     <AudioProvider>
-      <div className="min-h-screen flex flex-col bg-dark-950 text-white">
+      <div className={`min-h-screen flex flex-col ${
+        isDarkMode ? 'bg-dark-950 text-white' : 'bg-gray-50 text-gray-900'
+      }`}>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#1f2937',
+              borderRadius: '0.75rem',
+              border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+            },
+          }}
+        />
         <Header />
         <main className="flex-grow">
           <Hero />
@@ -20,7 +41,9 @@ export default function App() {
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-400 via-secondary-500 to-primary-400 bg-clip-text text-transparent mb-4 text-center">
                 Welcome to Maxy Electa Beats
               </h1>
-              <p className="text-gray-400 text-center text-lg mb-12">
+              <p className={`text-center text-lg mb-12 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 How can we help you find your perfect beat today?
               </p>
               <div className="relative">
@@ -42,7 +65,9 @@ export default function App() {
                     </div>
                   </div>
                   {/* Content container */}
-                  <div className="relative bg-dark-900/95 m-[2px] rounded-2xl">
+                  <div className={`relative m-[2px] rounded-2xl ${
+                    isDarkMode ? 'bg-dark-900/95' : 'bg-white/95'
+                  }`}>
                     <Chat className="w-full" />
                   </div>
                 </div>

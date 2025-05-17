@@ -1,7 +1,7 @@
 export interface Instrumental {
   id: string;
   title: string;
-  genre: 'DRILL' | 'DRILL MIX TRAP' | 'TRAP' | 'R&B' | 'AFRO TRAP' | 'AFRO DRILL' | 'DANCEHALL' | 'REGGAE DANCEHALL' | 'REGGAE';
+  genre: 'DRILL' | 'DRILL MIX' | 'AFRO BEAT' | 'TRAP' | 'R&B' | 'AFRO TRAP' | 'AFRO DRILL' | 'DANCEHALL' | 'REGGAE DANCEHALL' | 'REGGAE';
   price: number;
   audioSrc: string;
   bpm: number;

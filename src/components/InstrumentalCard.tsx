@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Download, ShoppingCart, AlertCircle } from 'lucide-react';
+import { Play, Pause, Download, ShoppingCart, AlertCircle, SkipBack, SkipForward, Heart } from 'lucide-react';
+import { useUserStore } from '../store/userStore';
 import AudioWaveform from './AudioWaveform';
+import { useAudio } from '../context/AudioContext';
+import toast from 'react-hot-toast';
 
 interface InstrumentalCardProps {
+  id: string;
   title: string;
   genre: string;
   bpm: number;
@@ -12,9 +16,14 @@ interface InstrumentalCardProps {
   duration: string;
   isNew?: boolean;
   isFeatured?: boolean;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
 }
 
 const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
+  id,
   title,
   genre,
   bpm,
@@ -23,14 +32,21 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   duration,
   isNew,
   isFeatured,
+  onNext,
+  onPrevious,
+  hasNext,
+  hasPrevious,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00');
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const { currentlyPlaying, setCurrentlyPlaying, autoPlayEnabled } = useAudio();
+  const { favorites, addToFavorites, removeFromFavorites } = useUserStore();
+  const isFavorite = favorites.includes(id);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -50,11 +66,9 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
           audioRef.current.volume = 1;
         }
 
-        // Reset audio element
         const audio = audioRef.current;
         audio.src = audioUrl;
         
-        // Wait for metadata to load
         await new Promise((resolve, reject) => {
           audio.addEventListener('loadedmetadata', resolve, { once: true });
           audio.addEventListener('error', reject, { once: true });
@@ -96,6 +110,10 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
       setCurrentTime('00:00');
       setProgress(0);
       audio.currentTime = 0;
+      
+      if (autoPlayEnabled && hasNext && onNext) {
+        onNext();
+      }
     };
 
     const handleError = () => {
@@ -113,7 +131,13 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [autoPlayEnabled, hasNext, onNext]);
+
+  useEffect(() => {
+    if (currentlyPlaying && currentlyPlaying !== id && isPlaying) {
+      togglePlay();
+    }
+  }, [currentlyPlaying, id]);
 
   const togglePlay = async () => {
     if (!audioRef.current || loadError || isLoading) return;
@@ -126,17 +150,11 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
+        setCurrentlyPlaying(null);
       } else {
-        // Stop all other audio elements
-        document.querySelectorAll('audio').forEach(audio => {
-          if (audio !== audioRef.current) {
-            audio.pause();
-            audio.currentTime = 0;
-          }
-        });
-
         await audioRef.current.play();
         setIsPlaying(true);
+        setCurrentlyPlaying(id);
       }
     } catch (error) {
       console.error('Error toggling playback:', error);
@@ -189,7 +207,6 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
         )}
         
         <div className="p-6 relative">
-          {/* Header with tags and price */}
           <div className="flex justify-between items-start mb-4">
             <div className="flex gap-2">
               {isNew && (
@@ -203,10 +220,34 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
                 </span>
               )}
             </div>
-            <span className="text-2xl font-bold text-primary-400">${price.toFixed(2)}</span>
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (isFavorite) {
+                    removeFromFavorites(id);
+                    toast.success('Removed from favorites');
+                  } else {
+                    addToFavorites(id);
+                    toast.success('Added to favorites');
+                  }
+                }}
+                className={`p-2 rounded-full transition-colors duration-300 ${
+                  isFavorite 
+                    ? 'text-red-500 bg-red-500/10' 
+                    : 'text-gray-400 hover:text-red-500 bg-dark-800 hover:bg-red-500/10'
+                }`}
+              >
+                <Heart 
+                  size={20} 
+                  className={isFavorite ? 'fill-current' : ''} 
+                />
+              </motion.button>
+              <span className="text-2xl font-bold text-primary-400">${price.toFixed(2)}</span>
+            </div>
           </div>
 
-          {/* Title and Info */}
           <div className="mb-4">
             <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
             <div className="flex items-center gap-3 text-sm">
@@ -218,7 +259,6 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
             </div>
           </div>
 
-          {/* Waveform */}
           <div className="mb-4">
             <AudioWaveform 
               audioUrl={audioUrl}
@@ -229,8 +269,21 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
             />
           </div>
 
-          {/* Controls */}
           <div className="flex items-center gap-4 mb-4">
+            <motion.button
+              whileHover={{ scale: !hasPrevious ? 1 : 1.05 }}
+              whileTap={{ scale: !hasPrevious ? 1 : 0.95 }}
+              onClick={onPrevious}
+              disabled={!hasPrevious}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                !hasPrevious
+                  ? 'opacity-0 cursor-default'
+                  : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
+              }`}
+            >
+              <SkipBack size={14} />
+            </motion.button>
+
             <motion.button
               whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
               whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
@@ -258,9 +311,22 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
                 <Play size={20} />
               )}
             </motion.button>
+
+            <motion.button
+              whileHover={{ scale: !hasNext ? 1 : 1.05 }}
+              whileTap={{ scale: !hasNext ? 1 : 0.95 }}
+              onClick={onNext}
+              disabled={!hasNext}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                !hasNext
+                  ? 'opacity-0 cursor-default'
+                  : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
+              }`}
+            >
+              <SkipForward size={14} />
+            </motion.button>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-3">
             <motion.button
               whileHover={{ scale: 1.02 }}
