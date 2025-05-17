@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import InstrumentalCard from './InstrumentalCard';
-import ElectricCanvas from './ElectricCanvas';
 import SearchBar from './SearchBar';
 import instrumentals from '../data/instrumentals';
 
@@ -40,11 +39,6 @@ const InstrumentalShowcase: React.FC = () => {
           <p className="text-gray-400 max-w-2xl mx-auto mb-8">
             Find the perfect sound for your next project. All instrumentals are professionally mixed and mastered.
           </p>
-          
-          {/* Electric Canvas Animation */}
-          <div className="mb-12">
-            <ElectricCanvas />
-          </div>
 
           {/* Search and Filter */}
           <SearchBar
