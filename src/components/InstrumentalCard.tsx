@@ -337,7 +337,11 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
               Buy Now
             </motion.button>
             
-            <motion.div
+            <motion.button
+              whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
+              whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
+              onClick={togglePlay}
+              disabled={!!loadError || isLoading}
               className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                 isPlaying
                   ? 'border-red-500 bg-red-500/10'
@@ -363,7 +367,7 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
                     : 'bg-gray-600'
                 }`}
               />
-            </motion.div>
+            </motion.button>
           </div>
         </div>
       </motion.div>
