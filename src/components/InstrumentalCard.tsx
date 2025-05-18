@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, ShoppingCart, AlertCircle, SkipBack, SkipForward, Heart } from 'lucide-react';
+import { Play, Pause, ShoppingCart, AlertCircle, Rewind, FastForward, Heart } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import AudioWaveform from './AudioWaveform';
 import { useAudio } from '../context/AudioContext';
@@ -16,10 +16,6 @@ interface InstrumentalCardProps {
   duration: string;
   isNew?: boolean;
   isFeatured?: boolean;
-  onNext?: () => void;
-  onPrevious?: () => void;
-  hasNext?: boolean;
-  hasPrevious?: boolean;
 }
 
 const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
@@ -32,10 +28,6 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   duration,
   isNew,
   isFeatured,
-  onNext,
-  onPrevious,
-  hasNext,
-  hasPrevious,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState('00:00');
@@ -44,7 +36,7 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const { currentlyPlaying, setCurrentlyPlaying, autoPlayEnabled } = useAudio();
+  const { currentlyPlaying, setCurrentlyPlaying } = useAudio();
   const { favorites, addToFavorites, removeFromFavorites } = useUserStore();
   const isFavorite = favorites.includes(id);
 
@@ -110,10 +102,6 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
       setCurrentTime('00:00');
       setProgress(0);
       audio.currentTime = 0;
-      
-      if (autoPlayEnabled && hasNext && onNext) {
-        onNext();
-      }
     };
 
     const handleError = () => {
@@ -131,7 +119,7 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [autoPlayEnabled, hasNext, onNext]);
+  }, []);
 
   useEffect(() => {
     if (currentlyPlaying && currentlyPlaying !== id && isPlaying) {
@@ -172,6 +160,22 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
     if (!isPlaying) {
       togglePlay();
     }
+  };
+
+  const skipForward = () => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = Math.min(
+      audioRef.current.currentTime + 10,
+      audioRef.current.duration
+    );
+  };
+
+  const skipBackward = () => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = Math.max(
+      audioRef.current.currentTime - 10,
+      0
+    );
   };
 
   return (
@@ -271,17 +275,17 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
 
           <div className="flex items-center gap-4 mb-4">
             <motion.button
-              whileHover={{ scale: !hasPrevious ? 1 : 1.05 }}
-              whileTap={{ scale: !hasPrevious ? 1 : 0.95 }}
-              onClick={onPrevious}
-              disabled={!hasPrevious}
+              whileHover={{ scale: isPlaying ? 1.05 : 1 }}
+              whileTap={{ scale: isPlaying ? 0.95 : 1 }}
+              onClick={skipBackward}
+              disabled={!isPlaying}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                !hasPrevious
-                  ? 'opacity-0 cursor-default'
+                !isPlaying
+                  ? 'opacity-50 cursor-not-allowed'
                   : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
               }`}
             >
-              <SkipBack size={14} />
+              <Rewind size={14} />
             </motion.button>
 
             <motion.button
@@ -313,17 +317,17 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: !hasNext ? 1 : 1.05 }}
-              whileTap={{ scale: !hasNext ? 1 : 0.95 }}
-              onClick={onNext}
-              disabled={!hasNext}
+              whileHover={{ scale: isPlaying ? 1.05 : 1 }}
+              whileTap={{ scale: isPlaying ? 0.95 : 1 }}
+              onClick={skipForward}
+              disabled={!isPlaying}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                !hasNext
-                  ? 'opacity-0 cursor-default'
+                !isPlaying
+                  ? 'opacity-50 cursor-not-allowed'
                   : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
               }`}
             >
-              <SkipForward size={14} />
+              <FastForward size={14} />
             </motion.button>
           </div>
 
