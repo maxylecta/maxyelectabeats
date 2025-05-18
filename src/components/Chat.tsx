@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, User, Music, ArrowDown } from 'lucide-react';
 import axios from 'axios';
+import { useThemeStore } from '../store/themeStore';
 
 interface Message {
   id: string;
@@ -50,6 +51,7 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [sessionId, setSessionId] = useState<string>('');
+  const { isDarkMode } = useThemeStore();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -127,20 +129,30 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
         session_id: sessionId
       });
       
-      const botResponse = response.data?.message || "I apologize, but I'm having trouble processing your request at the moment. Please try again.";
+      // Log the full response for debugging
+      console.log('Bot response:', response.data);
       
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        text: botResponse,
-        isUser: false,
-        timestamp: new Date()
-      }]);
+      // Check if we have a valid response
+      if (response.data && (typeof response.data.message === 'string' || typeof response.data === 'string')) {
+        const botMessage = {
+          id: Date.now().toString(),
+          text: response.data.message || response.data,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        console.error('Invalid bot response format:', response.data);
+        throw new Error('Invalid response format');
+      }
       
     } catch (error) {
-      console.error('Error sending message to webhook:', error);
+      console.error('Chat error:', error);
+      
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
-        text: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+        text: "I'm having trouble connecting right now. Please try again in a moment.",
         isUser: false,
         timestamp: new Date()
       }]);
@@ -154,7 +166,9 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
       {/* Chat Messages */}
       <div 
         ref={chatContainerRef}
-        className="h-[400px] overflow-y-auto rounded-t-2xl bg-dark-900/80 backdrop-blur-sm p-6 scroll-smooth"
+        className={`h-[400px] overflow-y-auto rounded-t-2xl p-6 scroll-smooth ${
+          isDarkMode ? 'bg-dark-900/80' : 'bg-white/80'
+        } backdrop-blur-sm`}
       >
         <AnimatePresence initial={false}>
           {messages.map(msg => (
@@ -181,11 +195,19 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
                 className={`max-w-[70%] rounded-2xl p-5 ${
                   msg.isUser
                     ? 'bg-primary-500 text-white'
-                    : 'bg-dark-800 text-gray-100'
+                    : isDarkMode 
+                      ? 'bg-dark-800 text-gray-100'
+                      : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                {!msg.isUser && <div className="text-sm text-primary-300 mb-1">Maxy Electa Bot</div>}
-                <p className="text-base leading-relaxed">{msg.text}</p>
+                {!msg.isUser && (
+                  <div className={`text-sm mb-1 ${
+                    isDarkMode ? 'text-primary-300' : 'text-primary-600'
+                  }`}>
+                    Maxy Electa Bot
+                  </div>
+                )}
+                <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                 <p className="text-xs opacity-70 mt-2">
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
@@ -195,9 +217,11 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  className="bg-dark-700 w-10 h-10 rounded-full flex items-center justify-center ml-3 flex-shrink-0"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ml-3 flex-shrink-0 ${
+                    isDarkMode ? 'bg-dark-700' : 'bg-gray-200'
+                  }`}
                 >
-                  <User size={20} className="text-white" />
+                  <User size={20} className={isDarkMode ? 'text-white' : 'text-gray-700'} />
                 </motion.div>
               )}
             </motion.div>
@@ -215,23 +239,35 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
               <div className="bg-primary-500 w-10 h-10 rounded-full flex items-center justify-center mr-3">
                 <Music size={20} className="text-white" />
               </div>
-              <div className="bg-dark-800 text-white rounded-2xl p-5">
-                <div className="text-sm text-primary-300 mb-1">Maxy Electa Bot</div>
+              <div className={`rounded-2xl p-5 ${
+                isDarkMode ? 'bg-dark-800' : 'bg-gray-100'
+              }`}>
+                <div className={`text-sm mb-1 ${
+                  isDarkMode ? 'text-primary-300' : 'text-primary-600'
+                }`}>
+                  Maxy Electa Bot
+                </div>
                 <div className="flex space-x-2">
                   <motion.span
                     animate={{ y: [0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 1, delay: 0 }}
-                    className="w-2.5 h-2.5 bg-primary-400 rounded-full"
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isDarkMode ? 'bg-primary-400' : 'bg-primary-500'
+                    }`}
                   />
                   <motion.span
                     animate={{ y: [0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                    className="w-2.5 h-2.5 bg-primary-400 rounded-full"
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isDarkMode ? 'bg-primary-400' : 'bg-primary-500'
+                    }`}
                   />
                   <motion.span
                     animate={{ y: [0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                    className="w-2.5 h-2.5 bg-primary-400 rounded-full"
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isDarkMode ? 'bg-primary-400' : 'bg-primary-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -259,7 +295,11 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
       
       {/* Chat Input */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary-500/20 to-primary-500/5 backdrop-blur-sm rounded-b-2xl" />
+        <div className={`absolute inset-0 bg-gradient-to-b ${
+          isDarkMode 
+            ? 'from-primary-500/20 to-primary-500/5'
+            : 'from-primary-500/10 to-primary-500/5'
+        } backdrop-blur-sm rounded-b-2xl`} />
         <div className="relative p-6">
           <div className="flex items-center gap-4">
             <input
@@ -268,7 +308,11 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Ask about beats, pricing, or custom orders..."
-              className="flex-1 bg-dark-800/50 text-white rounded-2xl px-8 py-5 text-lg outline-none placeholder-gray-400 border-2 border-dark-700/50 focus:border-primary-500/50 transition-all duration-300 hover:bg-dark-800/70"
+              className={`flex-1 rounded-2xl px-8 py-5 text-lg outline-none border-2 transition-all duration-300 ${
+                isDarkMode
+                  ? 'bg-dark-800/50 text-white placeholder-gray-400 border-dark-700/50 focus:border-primary-500/50 hover:bg-dark-800/70'
+                  : 'bg-white/50 text-gray-900 placeholder-gray-500 border-gray-200 focus:border-primary-500/50 hover:bg-white/70'
+              }`}
             />
             <motion.button
               whileHover={{ scale: 1.05 }}
