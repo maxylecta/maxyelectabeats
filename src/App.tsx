@@ -37,7 +37,7 @@ export default function App() {
         <main className="flex-grow">
           <Hero />
           <section className="py-24 container mx-auto px-4">
-            <div className="max-w-5xl mx-auto mb-32 relative">
+            <div className="max-w-5xl mx-auto mb-32 relative" id="contact">
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-400 via-secondary-500 to-primary-400 bg-clip-text text-transparent mb-4 text-center">
                 Welcome to Maxy Electa Beats
               </h1>
