@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Download, ShoppingCart, AlertCircle, SkipBack, SkipForward, Heart } from 'lucide-react';
+import { Play, Pause, ShoppingCart, AlertCircle, SkipBack, SkipForward, Heart } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import AudioWaveform from './AudioWaveform';
 import { useAudio } from '../context/AudioContext';
@@ -336,13 +336,34 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
               <ShoppingCart size={20} />
               Buy Now
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-dark-800 hover:bg-dark-700 text-white p-3 rounded-xl transition-all duration-300"
+            
+            <motion.div
+              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                isPlaying
+                  ? 'border-red-500 bg-red-500/10'
+                  : 'border-gray-600 bg-dark-800'
+              }`}
             >
-              <Download size={20} />
-            </motion.button>
+              <motion.div
+                initial={false}
+                animate={{
+                  scale: isPlaying ? [1, 1.1, 1] : 1,
+                  opacity: isPlaying ? 1 : 0.5,
+                }}
+                transition={{
+                  scale: {
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "easeInOut"
+                  }
+                }}
+                className={`w-6 h-6 rounded-full ${
+                  isPlaying
+                    ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]'
+                    : 'bg-gray-600'
+                }`}
+              />
+            </motion.div>
           </div>
         </div>
       </motion.div>
