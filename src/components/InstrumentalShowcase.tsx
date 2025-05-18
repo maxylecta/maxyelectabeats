@@ -5,6 +5,7 @@ import SearchBar from './SearchBar';
 import instrumentals from '../data/instrumentals';
 import FavoritesSection from './FavoritesSection';
 import { useThemeStore } from '../store/themeStore';
+import PremiumBeatCard from './PremiumBeatCard';
 
 const InstrumentalShowcase: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,6 +62,10 @@ const InstrumentalShowcase: React.FC = () => {
           <FavoritesSection />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Premium Beat Card */}
+            <PremiumBeatCard />
+            
+            {/* Regular Beat Cards */}
             {filteredInstrumentals.length > 0 ? (
               filteredInstrumentals.map((instrumental, index) => (
                 <InstrumentalCard
