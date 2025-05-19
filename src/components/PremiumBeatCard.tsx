@@ -78,7 +78,10 @@ const PremiumBeatCard: React.FC = () => {
           Produced by a team of professional beatmakers
         </p>
 
-        <motion.button
+        <motion.a
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfTeBaxa_-pTpk8eu-FQytEwUsgid4fkOIvEiB7g13OXoj--Q/viewform?usp=header"
+          target="_blank"
+          rel="noopener noreferrer"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full bg-accent-500 hover:bg-accent-600 text-white py-4 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden"
@@ -89,7 +92,7 @@ const PremiumBeatCard: React.FC = () => {
             className="relative z-10 transition-transform duration-300 group-hover:translate-x-1"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-        </motion.button>
+        </motion.a>
       </div>
     </motion.div>
   );
