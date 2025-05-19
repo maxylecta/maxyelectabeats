@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, ShoppingCart, AlertCircle, Rewind, FastForward, Heart } from 'lucide-react';
+import { Play, Pause, Download, ShoppingCart, AlertCircle, Rewind, FastForward, Heart } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import AudioWaveform from './AudioWaveform';
 import { useAudio } from '../context/AudioContext';
@@ -346,10 +346,10 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
               whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
               onClick={togglePlay}
               disabled={!!loadError || isLoading}
-              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 isPlaying
-                  ? 'border-red-500 bg-red-500/10'
-                  : 'border-gray-600 bg-dark-800'
+                  ? 'bg-primary-500/10 border-2 border-primary-500'
+                  : 'bg-dark-800 border-2 border-dark-700 hover:border-primary-500'
               }`}
             >
               <motion.div
@@ -365,10 +365,10 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
                     ease: "easeInOut"
                   }
                 }}
-                className={`w-6 h-6 rounded-full ${
+                className={`w-4 h-4 rounded ${
                   isPlaying
-                    ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]'
-                    : 'bg-gray-600'
+                    ? 'bg-primary-500 shadow-[0_0_12px_rgba(0,102,255,0.5)]'
+                    : 'bg-gray-400'
                 }`}
               />
             </motion.button>

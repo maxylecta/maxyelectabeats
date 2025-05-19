@@ -62,9 +62,6 @@ const InstrumentalShowcase: React.FC = () => {
           <FavoritesSection />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Premium Beat Card */}
-            <PremiumBeatCard />
-            
             {/* Regular Beat Cards */}
             {filteredInstrumentals.length > 0 ? (
               filteredInstrumentals.map((instrumental, index) => (
@@ -104,6 +101,9 @@ const InstrumentalShowcase: React.FC = () => {
                 </p>
               </div>
             )}
+            
+            {/* Premium Beat Card at the end */}
+            <PremiumBeatCard />
           </div>
         )}
       </div>
