@@ -5,6 +5,7 @@ import { useUserStore } from '../store/userStore';
 import AudioWaveform from './AudioWaveform';
 import { useAudio } from '../context/AudioContext';
 import toast from 'react-hot-toast';
+import LicenseModal from './LicenseModal';
 
 interface InstrumentalCardProps {
   id: string;
@@ -34,6 +35,7 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const { currentlyPlaying, setCurrentlyPlaying } = useAudio();
@@ -179,203 +181,213 @@ const InstrumentalCard: React.FC<InstrumentalCardProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div 
-        initial={false}
-        animate={isPlaying ? {
-          boxShadow: [
-            '0 0 0 rgba(0, 102, 255, 0)',
-            '0 0 20px rgba(0, 102, 255, 0.2)',
-            '0 0 30px rgba(0, 102, 255, 0.1)'
-          ],
-          scale: 1.01
-        } : {
-          boxShadow: '0 0 0 rgba(0, 102, 255, 0)',
-          scale: 1
-        }}
-        transition={{ duration: 0.3 }}
-        className="bg-dark-900/90 backdrop-blur-sm rounded-xl overflow-hidden border border-dark-800/50 relative"
-      >
-        {isPlaying && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 rounded-xl"
-            style={{
-              background: 'linear-gradient(180deg, rgba(0, 102, 255, 0.03) 0%, rgba(0, 102, 255, 0) 100%)',
-              border: '1px solid rgba(0, 102, 255, 0.1)',
-              boxShadow: 'inset 0 0 30px rgba(0, 102, 255, 0.05)'
-            }}
-          />
-        )}
-        
-        <div className="p-6 relative">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex gap-2">
-              {isNew && (
-                <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                  New
-                </span>
-              )}
-              {isFeatured && (
-                <span className="bg-accent-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                  Featured
-                </span>
-              )}
+    <>
+      <AnimatePresence>
+        <motion.div 
+          initial={false}
+          animate={isPlaying ? {
+            boxShadow: [
+              '0 0 0 rgba(0, 102, 255, 0)',
+              '0 0 20px rgba(0, 102, 255, 0.2)',
+              '0 0 30px rgba(0, 102, 255, 0.1)'
+            ],
+            scale: 1.01
+          } : {
+            boxShadow: '0 0 0 rgba(0, 102, 255, 0)',
+            scale: 1
+          }}
+          transition={{ duration: 0.3 }}
+          className="bg-dark-900/90 backdrop-blur-sm rounded-xl overflow-hidden border border-dark-800/50 relative"
+        >
+          {isPlaying && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 rounded-xl"
+              style={{
+                background: 'linear-gradient(180deg, rgba(0, 102, 255, 0.03) 0%, rgba(0, 102, 255, 0) 100%)',
+                border: '1px solid rgba(0, 102, 255, 0.1)',
+                boxShadow: 'inset 0 0 30px rgba(0, 102, 255, 0.05)'
+              }}
+            />
+          )}
+          
+          <div className="p-6 relative">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex gap-2">
+                {isNew && (
+                  <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    New
+                  </span>
+                )}
+                {isFeatured && (
+                  <span className="bg-accent-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    Featured
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (isFavorite) {
+                      removeFromFavorites(id);
+                      toast.success('Removed from favorites');
+                    } else {
+                      addToFavorites(id);
+                      toast.success('Added to favorites');
+                    }
+                  }}
+                  className={`p-2 rounded-full transition-colors duration-300 ${
+                    isFavorite 
+                      ? 'text-red-500 bg-red-500/10' 
+                      : 'text-gray-400 hover:text-red-500 bg-dark-800 hover:bg-red-500/10'
+                  }`}
+                >
+                  <Heart 
+                    size={20} 
+                    className={isFavorite ? 'fill-current' : ''} 
+                  />
+                </motion.button>
+                <span className="text-2xl font-bold text-primary-400">${price.toFixed(2)}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
+
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="bg-primary-500/20 text-primary-400 px-2 py-1 rounded-full font-medium">
+                  {genre}
+                </span>
+                <span className="text-gray-400">{bpm} BPM</span>
+                <span className="text-gray-400">{currentTime} / {duration}</span>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <AudioWaveform 
+                audioUrl={audioUrl}
+                width={550}
+                height={64}
+                progress={progress}
+                onSeek={handleSeek}
+              />
+            </div>
+
+            <div className="flex items-center gap-4 mb-4">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if (isFavorite) {
-                    removeFromFavorites(id);
-                    toast.success('Removed from favorites');
-                  } else {
-                    addToFavorites(id);
-                    toast.success('Added to favorites');
-                  }
-                }}
-                className={`p-2 rounded-full transition-colors duration-300 ${
-                  isFavorite 
-                    ? 'text-red-500 bg-red-500/10' 
-                    : 'text-gray-400 hover:text-red-500 bg-dark-800 hover:bg-red-500/10'
+                whileHover={{ scale: isPlaying ? 1.05 : 1 }}
+                whileTap={{ scale: isPlaying ? 0.95 : 1 }}
+                onClick={skipBackward}
+                disabled={!isPlaying}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  !isPlaying
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
                 }`}
               >
-                <Heart 
-                  size={20} 
-                  className={isFavorite ? 'fill-current' : ''} 
+                <Rewind size={14} />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
+                whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
+                onClick={togglePlay}
+                disabled={!!loadError || isLoading}
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-300 ${
+                  loadError 
+                    ? 'bg-red-500 cursor-not-allowed'
+                    : isLoading
+                    ? 'bg-gray-500 cursor-wait'
+                    : 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/30'
+                }`}
+              >
+                {loadError ? (
+                  <AlertCircle size={20} />
+                ) : isLoading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                  />
+                ) : isPlaying ? (
+                  <Pause size={20} />
+                ) : (
+                  <Play size={20} />
+                )}
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: isPlaying ? 1.05 : 1 }}
+                whileTap={{ scale: isPlaying ? 0.95 : 1 }}
+                onClick={skipForward}
+                disabled={!isPlaying}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  !isPlaying
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
+                }`}
+              >
+                <FastForward size={14} />
+              </motion.button>
+            </div>
+
+            <div className="flex gap-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setLicenseModalOpen(true)}
+                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
+              >
+                <ShoppingCart size={20} />
+                Buy Now
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
+                whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
+                onClick={togglePlay}
+                disabled={!!loadError || isLoading}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  isPlaying
+                    ? 'bg-primary-500/10 border-2 border-primary-500'
+                    : 'bg-dark-800 border-2 border-dark-700 hover:border-primary-500'
+                }`}
+              >
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: isPlaying ? [1, 1.1, 1] : 1,
+                    opacity: isPlaying ? 1 : 0.5,
+                  }}
+                  transition={{
+                    scale: {
+                      repeat: Infinity,
+                      duration: 2,
+                      ease: "easeInOut"
+                    }
+                  }}
+                  className={`w-4 h-4 rounded ${
+                    isPlaying
+                      ? 'bg-primary-500 shadow-[0_0_12px_rgba(0,102,255,0.5)]'
+                      : 'bg-gray-400'
+                  }`}
                 />
               </motion.button>
-              <span className="text-2xl font-bold text-primary-400">${price.toFixed(2)}</span>
             </div>
           </div>
+        </motion.div>
+      </AnimatePresence>
 
-          <div className="mb-4">
-            <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
-            <div className="flex items-center gap-3 text-sm">
-              <span className="bg-primary-500/20 text-primary-400 px-2 py-1 rounded-full font-medium">
-                {genre}
-              </span>
-              <span className="text-gray-400">{bpm} BPM</span>
-              <span className="text-gray-400">{currentTime} / {duration}</span>
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <AudioWaveform 
-              audioUrl={audioUrl}
-              width={550}
-              height={64}
-              progress={progress}
-              onSeek={handleSeek}
-            />
-          </div>
-
-          <div className="flex items-center gap-4 mb-4">
-            <motion.button
-              whileHover={{ scale: isPlaying ? 1.05 : 1 }}
-              whileTap={{ scale: isPlaying ? 0.95 : 1 }}
-              onClick={skipBackward}
-              disabled={!isPlaying}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                !isPlaying
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
-              }`}
-            >
-              <Rewind size={14} />
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
-              whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
-              onClick={togglePlay}
-              disabled={!!loadError || isLoading}
-              className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-300 ${
-                loadError 
-                  ? 'bg-red-500 cursor-not-allowed'
-                  : isLoading
-                  ? 'bg-gray-500 cursor-wait'
-                  : 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-500/30'
-              }`}
-            >
-              {loadError ? (
-                <AlertCircle size={20} />
-              ) : isLoading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                />
-              ) : isPlaying ? (
-                <Pause size={20} />
-              ) : (
-                <Play size={20} />
-              )}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: isPlaying ? 1.05 : 1 }}
-              whileTap={{ scale: isPlaying ? 0.95 : 1 }}
-              onClick={skipForward}
-              disabled={!isPlaying}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                !isPlaying
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'text-gray-400 hover:text-white bg-dark-800/50 hover:bg-dark-700/50'
-              }`}
-            >
-              <FastForward size={14} />
-            </motion.button>
-          </div>
-
-          <div className="flex gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
-            >
-              <ShoppingCart size={20} />
-              Buy Now
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: loadError || isLoading ? 1 : 1.05 }}
-              whileTap={{ scale: loadError || isLoading ? 1 : 0.95 }}
-              onClick={togglePlay}
-              disabled={!!loadError || isLoading}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                isPlaying
-                  ? 'bg-primary-500/10 border-2 border-primary-500'
-                  : 'bg-dark-800 border-2 border-dark-700 hover:border-primary-500'
-              }`}
-            >
-              <motion.div
-                initial={false}
-                animate={{
-                  scale: isPlaying ? [1, 1.1, 1] : 1,
-                  opacity: isPlaying ? 1 : 0.5,
-                }}
-                transition={{
-                  scale: {
-                    repeat: Infinity,
-                    duration: 2,
-                    ease: "easeInOut"
-                  }
-                }}
-                className={`w-4 h-4 rounded ${
-                  isPlaying
-                    ? 'bg-primary-500 shadow-[0_0_12px_rgba(0,102,255,0.5)]'
-                    : 'bg-gray-400'
-                }`}
-              />
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+      <LicenseModal
+        isOpen={licenseModalOpen}
+        onClose={() => setLicenseModalOpen(false)}
+        beatTitle={title}
+        basePrice={price}
+      />
+    </>
   );
 };
 

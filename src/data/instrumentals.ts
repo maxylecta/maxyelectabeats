@@ -47,7 +47,7 @@ const instrumentals: Instrumental[] = [
     id: "instr-003",
     title: "Tunnel",
     genre: "TRAP",
-    price: 34.99,
+    price: 74.99,
     audioSrc: "https://maxy-electa-beats.b-cdn.net/tunnel.mp3",
     bpm: 99,
     length: "4:00",
