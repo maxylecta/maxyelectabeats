@@ -83,7 +83,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
     }
 
     if (plan.paymentLink) {
-      window.location.href = plan.paymentLink;
+      window.open(plan.paymentLink, '_blank');
     }
   };
 
@@ -202,14 +202,27 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
                           ))}
                         </ul>
                         
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleSelectPlan(plan)}
-                          className={`w-full bg-${plan.color}-500 hover:bg-${plan.color}-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-${plan.color}-500/20`}
-                        >
-                          Select Plan
-                        </motion.button>
+                        {plan.name === 'FREE' ? (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleSelectPlan(plan)}
+                            className={`w-full bg-${plan.color}-500 hover:bg-${plan.color}-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-${plan.color}-500/20`}
+                          >
+                            Register Now
+                          </motion.button>
+                        ) : (
+                          <motion.a
+                            href={plan.paymentLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`block w-full text-center bg-${plan.color}-500 hover:bg-${plan.color}-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-${plan.color}-500/20`}
+                          >
+                            Subscribe Now
+                          </motion.a>
+                        )}
                       </div>
                     </motion.div>
                   ))}
