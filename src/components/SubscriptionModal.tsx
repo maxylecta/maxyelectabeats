@@ -29,6 +29,7 @@ const plans = [
     name: 'BASIC',
     discount: 20,
     price: 9.99,
+    paymentLink: 'https://buy.stripe.com/bJe28s70j7u7cIx6lSabK01',
     icon: Shield,
     color: 'success',
     description: 'Start saving on every beat',
@@ -43,6 +44,7 @@ const plans = [
     name: 'PRO',
     discount: 30,
     price: 19.99,
+    paymentLink: 'https://buy.stripe.com/28EdRagAT7u7fUJ39GabK02',
     icon: Sparkles,
     color: 'secondary',
     description: 'Perfect for regular buyers',
@@ -57,6 +59,7 @@ const plans = [
     name: 'PREMIUM',
     discount: 40,
     price: 29.99,
+    paymentLink: 'https://buy.stripe.com/3cI7sMbgz8ybgYN9y4abK03',
     icon: Crown,
     color: 'accent',
     description: 'Maximum savings & benefits',
@@ -76,10 +79,11 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
   const handleSelectPlan = (plan: typeof plans[0]) => {
     if (plan.name === 'FREE') {
       setShowRegistration(true);
-    } else {
-      // TODO: Implement actual subscription flow
-      toast.success(`Selected ${plan.name} plan! Subscription flow coming soon.`);
-      onClose();
+      return;
+    }
+
+    if (plan.paymentLink) {
+      window.location.href = plan.paymentLink;
     }
   };
 
