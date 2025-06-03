@@ -22,22 +22,6 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
     setShowUserInfoModal(true);
   };
 
-  const handleUserInfoSubmit = (firstName: string, lastName: string, email: string) => {
-    setShowUserInfoModal(false);
-    
-    // Store user info in localStorage for future use
-    localStorage.setItem('user_first_name', firstName);
-    localStorage.setItem('user_last_name', lastName);
-    localStorage.setItem('user_email', email);
-
-    // Proceed with payment based on license type
-    if (selectedLicense === 'commercial') {
-      window.open('https://buy.stripe.com/bJe28s70j7u7cIx6lSabK01', '_blank');
-    } else if (selectedLicense === 'exclusive') {
-      window.open('https://buy.stripe.com/28EdRagAT7u7fUJ39GabK02', '_blank');
-    }
-  };
-
   return (
     <>
       <AnimatePresence>
@@ -232,7 +216,7 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
       <UserInfoModal
         isOpen={showUserInfoModal}
         onClose={() => setShowUserInfoModal(false)}
-        onSubmit={handleUserInfoSubmit}
+        onSubmit={() => {}} // This is no longer used since we handle the redirect in UserInfoModal
         beatTitle={beatTitle}
         licenseType={selectedLicense || 'commercial'}
         price={selectedLicense === 'exclusive' ? basePrice * 2 : basePrice}

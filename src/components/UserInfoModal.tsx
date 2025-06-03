@@ -24,9 +24,9 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
   const { isDarkMode } = useThemeStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: ''
+    first_name: localStorage.getItem('user_first_name') || '',
+    last_name: localStorage.getItem('user_last_name') || '',
+    email: localStorage.getItem('user_email') || ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,10 +50,22 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit user information');
+        throw new Error('Failed to process request');
       }
 
-      onSubmit(formData.first_name, formData.last_name, formData.email);
+      const data = await response.json();
+      
+      if (!data.checkout_url) {
+        throw new Error('No checkout URL received');
+      }
+
+      // Store user info for future use
+      localStorage.setItem('user_first_name', formData.first_name);
+      localStorage.setItem('user_last_name', formData.last_name);
+      localStorage.setItem('user_email', formData.email);
+
+      // Redirect to checkout
+      window.location.href = data.checkout_url;
     } catch (error) {
       console.error('Submission error:', error);
       toast.error('Failed to process request. Please try again.');
