@@ -8,6 +8,12 @@ interface RegistrationFormProps {
   onClose: () => void;
 }
 
+interface ErrorResponse {
+  success: boolean;
+  error: string;
+  code: string;
+}
+
 const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose }) => {
   const { isDarkMode } = useThemeStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,9 +39,30 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose }) => {
         body: JSON.stringify(formData)
       });
 
+      const responseData = await response.json().catch(() => null);
+      
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || 'Registration failed');
+        // Log detailed error information
+        console.error('Registration failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          responseData
+        });
+
+        // Handle specific error cases
+        if (response.status === 429) {
+          throw new Error('Too many registration attempts. Please try again later.');
+        } else if (response.status === 403) {
+          throw new Error('Access denied. Please check your connection and try again.');
+        } else if (responseData?.error) {
+          throw new Error(responseData.error);
+        } else {
+          throw new Error(`Registration failed (${response.status}). Please try again.`);
+        }
+      }
+
+      if (!responseData?.success && !response.ok) {
+        throw new Error('Invalid response from server. Please try again.');
       }
 
       setIsSuccess(true);
@@ -45,7 +72,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose }) => {
       }, 2000);
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');
+      
+      // Provide more specific error messages based on error type
+      if (error instanceof TypeError && error.message.includes('NetworkError')) {
+        toast.error('Network error. Please check your internet connection.');
+      } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        toast.error('Unable to reach registration server. Please try again later.');
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
