@@ -34,7 +34,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -64,13 +64,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       localStorage.setItem('user_last_name', formData.last_name);
       localStorage.setItem('user_email', formData.email);
 
-      // Open Stripe checkout in a new tab
-      window.open(data.checkout_url, '_blank');
-      
-      // Close the modal after opening the checkout
-      onClose();
-      
-      toast.success('Checkout opened in a new tab');
+      // Redirect to checkout
+      window.location.href = data.checkout_url;
     } catch (error) {
       console.error('Submission error:', error);
       toast.error('Failed to process request. Please try again.');
