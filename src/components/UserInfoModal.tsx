@@ -181,21 +181,37 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 />
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={isSubmitting}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    <span>Processing...</span>
-                  </>
-                ) : (
-                  'Continue to Payment'
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                  disabled={isSubmitting}
+                  className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    'Continue to Payment'
+                  )}
+                </motion.button>
+
+                {isSubmitting && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`absolute -bottom-12 left-0 right-0 text-center text-sm ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}
+                  >
+                    Generating your license... Please wait 30 seconds to 1 minute.
+                    <br />
+                    Your custom license and discount are being processed automatically.
+                  </motion.div>
                 )}
-              </motion.button>
+              </div>
             </form>
           </motion.div>
         </motion.div>
