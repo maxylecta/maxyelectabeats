@@ -34,7 +34,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
