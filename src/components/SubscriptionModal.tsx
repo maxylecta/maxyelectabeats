@@ -94,7 +94,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
           onClick={() => {
             if (!showRegistration) {
               onClose();
@@ -107,7 +107,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
             exit={{ scale: 0.95, opacity: 0 }}
             className={`w-full max-w-6xl rounded-2xl ${
               isDarkMode ? 'bg-dark-900' : 'bg-white'
-            } p-6 md:p-8 shadow-xl`}
+            } p-6 md:p-8 shadow-xl my-8`}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
@@ -147,7 +147,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
             ) : (
               <>
                 {/* Plans Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   {plans.map((plan) => (
                     <motion.div
                       key={plan.name}
