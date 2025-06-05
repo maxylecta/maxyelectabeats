@@ -80,11 +80,9 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
 
         abortControllerRef.current = new AbortController();
 
+        // Removed the 'Range' header to avoid CORS issues
         const res = await fetch(audioUrl, {
-          signal: abortControllerRef.current.signal,
-          headers: {
-            'Range': 'bytes=0-1000000' // Request first 1MB only for waveform
-          }
+          signal: abortControllerRef.current.signal
         });
 
         if (!res.ok) {

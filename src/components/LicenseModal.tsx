@@ -22,6 +22,8 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
     setShowUserInfoModal(true);
   };
 
+  const showExclusiveLicense = beatTitle.toLowerCase() !== 'street corner';
+
   return (
     <>
       <AnimatePresence>
@@ -65,7 +67,7 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
               </div>
 
               {/* License Options */}
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className={`grid ${showExclusiveLicense ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-6 mb-8`}>
                 {/* Commercial License */}
                 <motion.div
                   whileHover={{ scale: 1.02 }}
@@ -126,72 +128,74 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
                   </motion.button>
                 </motion.div>
 
-                {/* Exclusive License */}
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className={`relative rounded-xl p-6 ${
-                    isDarkMode 
-                      ? 'bg-dark-800 border border-dark-700' 
-                      : 'bg-white border border-gray-200'
-                  }`}
-                >
-                  <div className="absolute -top-3 -right-3">
-                    <span className="bg-accent-500 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
-                      Best Value
-                    </span>
-                  </div>
-
-                  <div className="mb-4">
-                    <h3 className="text-2xl font-bold text-accent-500 mb-2 flex items-center gap-2">
-                      Exclusive License
-                      <Crown className="text-accent-500" size={24} />
-                    </h3>
-                    <div className="flex items-baseline gap-2 mb-4">
-                      <span className="text-3xl font-bold">
-                        ${basePrice * 2}
-                      </span>
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                        one-time
+                {/* Exclusive License - Only show for beats other than "street corner" */}
+                {showExclusiveLicense && (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className={`relative rounded-xl p-6 ${
+                      isDarkMode 
+                        ? 'bg-dark-800 border border-dark-700' 
+                        : 'bg-white border border-gray-200'
+                    }`}
+                  >
+                    <div className="absolute -top-3 -right-3">
+                      <span className="bg-accent-500 text-white text-sm px-3 py-1 rounded-full font-medium shadow-lg">
+                        Best Value
                       </span>
                     </div>
-                  </div>
 
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2">
-                      <Check className="text-accent-500" size={20} />
-                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        Exclusive rights
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="text-accent-500" size={20} />
-                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        Beat removed from store
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="text-accent-500" size={20} />
-                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        Full ownership transfer
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="text-accent-500" size={20} />
-                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        No credit required
-                      </span>
-                    </li>
-                  </ul>
+                    <div className="mb-4">
+                      <h3 className="text-2xl font-bold text-accent-500 mb-2 flex items-center gap-2">
+                        Exclusive License
+                        <Crown className="text-accent-500" size={24} />
+                      </h3>
+                      <div className="flex items-baseline gap-2 mb-4">
+                        <span className="text-3xl font-bold">
+                          ${basePrice * 2}
+                        </span>
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          one-time
+                        </span>
+                      </div>
+                    </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handlePurchase('exclusive')}
-                    className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-accent-500/20"
-                  >
-                    Buy Exclusive License
-                  </motion.button>
-                </motion.div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center gap-2">
+                        <Check className="text-accent-500" size={20} />
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+                          Exclusive rights
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="text-accent-500" size={20} />
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+                          Beat removed from store
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="text-accent-500" size={20} />
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+                          Full ownership transfer
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="text-accent-500" size={20} />
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+                          No credit required
+                        </span>
+                      </li>
+                    </ul>
+
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handlePurchase('exclusive')}
+                      className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-accent-500/20"
+                    >
+                      Buy Exclusive License
+                    </motion.button>
+                  </motion.div>
+                )}
               </div>
 
               {/* FAQ Link */}
