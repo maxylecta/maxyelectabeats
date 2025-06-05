@@ -23,6 +23,8 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const waveformDataRef = useRef<number[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 3;
 
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
     if (!onSeek || !svgRef.current) return;
@@ -66,6 +68,13 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
     return svg;
   };
 
+  // Generate placeholder waveform when audio can't be loaded
+  const generatePlaceholderWaveform = () => {
+    const samples = width;
+    const waveform = Array.from({ length: samples }, () => Math.random() * 0.5 + 0.25);
+    return generateSVGPath(waveform);
+  };
+
   // Load and process audio data
   useEffect(() => {
     const processAudio = async () => {
@@ -80,9 +89,13 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
 
         abortControllerRef.current = new AbortController();
 
-        // Removed the 'Range' header to avoid CORS issues
         const res = await fetch(audioUrl, {
-          signal: abortControllerRef.current.signal
+          signal: abortControllerRef.current.signal,
+          mode: 'cors', // Explicitly request CORS
+          credentials: 'omit', // Don't send credentials
+          headers: {
+            'Accept': 'audio/*' // Explicitly request audio content
+          }
         });
 
         if (!res.ok) {
@@ -117,13 +130,27 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
         const svg = generateSVGPath(normalizedWaveform);
         setSvgPath(svg);
         setIsLoading(false);
+        retryCountRef.current = 0; // Reset retry count on success
         
       } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          return;
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            return;
+          }
+          
+          console.warn('Error loading audio:', error.message);
+          
+          // Implement retry logic
+          if (retryCountRef.current < MAX_RETRIES) {
+            retryCountRef.current++;
+            setTimeout(processAudio, 1000 * retryCountRef.current); // Exponential backoff
+            return;
+          }
+
+          // If all retries failed, show placeholder waveform
+          setError('Audio preview unavailable');
+          setSvgPath(generatePlaceholderWaveform());
         }
-        console.error('Error generating waveform:', error);
-        setError('Failed to load waveform');
         setIsLoading(false);
       }
     };
@@ -151,25 +178,22 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
     );
   }
 
-  if (error) {
-    return (
-      <div className="w-full h-12 bg-dark-800/50 rounded-lg flex items-center justify-center text-red-500">
-        {error}
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full flex items-center justify-center">
+    <div className="w-full flex items-center justify-center relative">
       <svg
         ref={svgRef}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="rounded-lg overflow-hidden cursor-pointer"
+        className={`rounded-lg overflow-hidden ${onSeek ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: svgPath }}
       />
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs text-red-500/75">{error}</span>
+        </div>
+      )}
     </div>
   );
 };

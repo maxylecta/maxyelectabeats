@@ -52,6 +52,17 @@ const instrumentals: Instrumental[] = [
     bpm: 99,
     length: "4:00",
     dateAdded: "2025-05-02"
+  },
+  {
+    id: "instr-004",
+    title: "Frostbite Drill",
+    genre: "DRILL",
+    price: 89.00,
+    audioSrc: "https://maxy-electa-beats.b-cdn.net/Frostbite%20Drill%20bunny.mp3",
+    bpm: 140,
+    length: "3:30",
+    dateAdded: new Date().toISOString().split('T')[0],
+    isFeatured: true
   }
 ];
 
