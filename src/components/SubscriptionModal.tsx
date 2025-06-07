@@ -32,7 +32,7 @@ const plans = [
     discount: 20,
     price: 9.99,
     paymentLink: 'https://buy.stripe.com/bJe28s70j7u7cIx6lSabK01',
-    paypalPlanId: 'P-2D528612KT1150050NBBTRTY',
+    paypalPlanId: 'P-6NP48186T4925741KNBB7UEY',
     icon: Shield,
     color: 'success',
     description: 'Start saving on every beat',
@@ -48,7 +48,7 @@ const plans = [
     discount: 30,
     price: 19.99,
     paymentLink: 'https://buy.stripe.com/28EdRagAT7u7fUJ39GabK02',
-    paypalPlanId: 'P-9X66027987760874VNBB4N7Q',
+    paypalPlanId: 'P-0EV99421MN443391GNBB74DA',
     icon: Sparkles,
     color: 'secondary',
     description: 'Perfect for regular buyers',
@@ -64,7 +64,7 @@ const plans = [
     discount: 40,
     price: 29.99,
     paymentLink: 'https://buy.stripe.com/3cI7sMbgz8ybgYN9y4abK03',
-    paypalPlanId: 'P-2VK0667620504725XNBB4SOY',
+    paypalPlanId: 'P-0VU82432XX1020343NBB75SA',
     icon: Crown,
     color: 'accent',
     description: 'Maximum savings & benefits',
@@ -77,9 +77,9 @@ const plans = [
   }
 ];
 
-// PayPal configuration with your actual client ID
+// PayPal configuration with your LIVE production client ID
 const paypalOptions = {
-  'client-id': 'ASfmU4IfcdKFn0ZuEJvSK752MKa3kdTlfCyGGiNr2ClbVSkb-ryMyYCVCZmWiMsI5kwJsZv7cgJh5nHi',
+  'client-id': 'AaOQrfpt2_qnO9grGiNefp-bfJihrbl5IHSdwn-sqqF4JTg69eBEndhpaLmhiSFRiVmSmFdEVG6XLPdq',
   currency: 'USD',
   intent: 'subscription',
   vault: true
