@@ -47,7 +47,7 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
               {/* Header */}
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-secondary-500 bg-clip-text text-transparent">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-500 bg-clip-text text-transparent">
                     Choose Your License
                   </h2>
                   <p className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
