@@ -79,7 +79,7 @@ const plans = [
 
 // PayPal configuration with your LIVE production client ID
 const paypalOptions = {
-  'client-id': 'AaOQrfpt2_qnO9grGiNefp-bfJihrbl5IHSdwn-sqqF4JTg69eBEndhpaLmhiSFRiVmSmFdEVG6XLPdq',
+  'client-id': 'ATjSzNXWUCKwzL2b_16a2GweqXKAMp_eQSXZnU-d_aauRmNYsI09Zk8WNrWLqmKHY2iZfx1bdB4_Sx0L',
   currency: 'USD',
   intent: 'subscription',
   vault: true
