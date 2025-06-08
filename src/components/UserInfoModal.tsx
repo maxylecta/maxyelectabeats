@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader } from 'lucide-react';
+import { X, Loader, CreditCard } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
+import { getOrCreateSessionId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
 
 interface UserInfoModalProps {
@@ -23,30 +24,54 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 }) => {
   const { isDarkMode } = useThemeStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
   const [formData, setFormData] = useState({
     first_name: localStorage.getItem('user_first_name') || '',
     last_name: localStorage.getItem('user_last_name') || '',
-    email: localStorage.getItem('user_email') || ''
+    email: localStorage.getItem('user_email') || '',
+    payment_method: '' as 'stripe' | 'paypal' | ''
   });
+
+  // Generate or retrieve session ID when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const currentSessionId = getOrCreateSessionId();
+      setSessionId(currentSessionId);
+      console.log('Payment session ID:', currentSessionId); // For debugging
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.payment_method) {
+      toast.error('Please select a payment method');
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
+      const payload = {
+        session_id: sessionId,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        payment_method: formData.payment_method,
+        beat_title: beatTitle,
+        license: licenseType,
+        price: price,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('Sending payload with session ID:', payload); // For debugging
+
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          beat_title: beatTitle,
-          license: licenseType,
-          price: price
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -63,6 +88,16 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       localStorage.setItem('user_first_name', formData.first_name);
       localStorage.setItem('user_last_name', formData.last_name);
       localStorage.setItem('user_email', formData.email);
+
+      // Store session info for potential use after redirect
+      sessionStorage.setItem('last_payment_session', JSON.stringify({
+        session_id: sessionId,
+        beat_title: beatTitle,
+        license: licenseType,
+        price: price,
+        payment_method: formData.payment_method,
+        timestamp: new Date().toISOString()
+      }));
 
       // Redirect to checkout
       window.location.href = data.checkout_url;
@@ -94,9 +129,16 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-500 bg-clip-text text-transparent">
-                Complete Your Purchase
-              </h2>
+              <div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-500 bg-clip-text text-transparent">
+                  Complete Your Purchase
+                </h2>
+                {sessionId && (
+                  <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Session: {sessionId.slice(-8)}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={onClose}
                 className={`p-2 rounded-full transition-colors ${
@@ -181,37 +223,94 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 />
               </div>
 
-              <div className="relative">
-                <motion.button
-                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
-                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                  disabled={isSubmitting}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center gap-2"
+              <div>
+                <label 
+                  className={`block text-sm font-medium mb-3 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    'Continue to Payment'
-                  )}
-                </motion.button>
-
-                {isSubmitting && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`absolute -bottom-12 left-0 right-0 text-center text-sm ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  Payment Method <span className="text-primary-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setFormData(prev => ({ ...prev, payment_method: 'stripe' }))}
+                    className={`p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                      formData.payment_method === 'stripe'
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : isDarkMode
+                          ? 'border-dark-700 hover:border-blue-500/50 bg-dark-800'
+                          : 'border-gray-300 hover:border-blue-500/50 bg-white'
                     }`}
                   >
-                    Generating your license... Please wait 30 seconds to 1 minute.
-                    <br />
-                    Your custom license and discount are being processed automatically.
-                  </motion.div>
-                )}
+                    <CreditCard className={`w-6 h-6 ${
+                      formData.payment_method === 'stripe' ? 'text-blue-500' : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`} />
+                    <span className={`text-sm font-medium ${
+                      formData.payment_method === 'stripe' ? 'text-blue-500' : isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Pay by Stripe
+                    </span>
+                    <span className={`text-xs ${
+                      formData.payment_method === 'stripe' ? 'text-blue-400' : isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                    }`}>
+                      (Card)
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setFormData(prev => ({ ...prev, payment_method: 'paypal' }))}
+                    className={`p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                      formData.payment_method === 'paypal'
+                        ? 'border-yellow-500 bg-yellow-500/10'
+                        : isDarkMode
+                          ? 'border-dark-700 hover:border-yellow-500/50 bg-dark-800'
+                          : 'border-gray-300 hover:border-yellow-500/50 bg-white'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded font-bold text-xs flex items-center justify-center ${
+                      formData.payment_method === 'paypal' 
+                        ? 'bg-yellow-500 text-white' 
+                        : isDarkMode 
+                          ? 'bg-gray-600 text-gray-300' 
+                          : 'bg-gray-400 text-white'
+                    }`}>
+                      PP
+                    </div>
+                    <span className={`text-sm font-medium ${
+                      formData.payment_method === 'paypal' ? 'text-yellow-500' : isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Pay by PayPal
+                    </span>
+                    <span className={`text-xs ${
+                      formData.payment_method === 'paypal' ? 'text-yellow-400' : isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                    }`}>
+                      (PayPal)
+                    </span>
+                  </motion.button>
+                </div>
               </div>
+
+              <motion.button
+                whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                disabled={isSubmitting || !formData.payment_method}
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader className="w-5 h-5 animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  'Continue to Payment'
+                )}
+              </motion.button>
             </form>
           </motion.div>
         </motion.div>

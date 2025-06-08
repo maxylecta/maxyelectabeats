@@ -44,7 +44,7 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
   const onApprove = async (data: any, actions: any) => {
     try {
       // Send subscription data to your n8n webhook
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/a81d276b-2057-4fea-98c6-3e887d56f942', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Loader, Music2 } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
+import { getOrCreateSessionId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
 
 interface CustomBeatRequestModalProps {
@@ -31,19 +32,35 @@ const CustomBeatRequestModal: React.FC<CustomBeatRequestModalProps> = ({ isOpen,
   const { isDarkMode } = useThemeStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
   const [formData, setFormData] = useState<FormData>(initialFormData);
+
+  // Generate or retrieve session ID when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const currentSessionId = getOrCreateSessionId();
+      setSessionId(currentSessionId);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        session_id: sessionId,
+        ...formData,
+        request_type: 'custom_beat',
+        timestamp: new Date().toISOString()
+      };
+
       const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/62519f62-b8ce-4545-81a1-8735e10779e3', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -153,6 +170,11 @@ const CustomBeatRequestModal: React.FC<CustomBeatRequestModalProps> = ({ isOpen,
                   <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     Tell us about your perfect beat
                   </p>
+                  {sessionId && (
+                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Session: {sessionId.slice(-8)}
+                    </p>
+                  )}
                 </div>
               </div>
               <button
