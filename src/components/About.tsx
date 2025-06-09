@@ -59,13 +59,13 @@ const About: React.FC = () => {
                   <p>For any questions, special requests, or custom projects, feel free to reach out via the contact form or through:</p>
                   <div className="flex flex-col gap-3">
                     <a 
-                      href="https://instagram.com/maxyelecta" 
+                      href="https://www.instagram.com/maxyelectabeats/" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
                     >
                       <Instagram className="w-5 h-5" />
-                      @maxyelecta
+                      @maxyelectabeats
                     </a>
                     <a 
                       href="mailto:support@maxyelectabeats.com"

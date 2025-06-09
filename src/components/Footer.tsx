@@ -34,10 +34,22 @@ const Footer: React.FC = () => {
               Professional audio instrumentals for artists who demand excellence. Find your perfect sound and elevate your music.
             </p>
             <div className="flex space-x-4">
-              <SocialIcon icon={<Instagram size={20} />} />
-              <SocialIcon icon={<Twitter size={20} />} />
-              <SocialIcon icon={<Youtube size={20} />} />
-              <SocialIcon icon={<Facebook size={20} />} />
+              <SocialIcon 
+                icon={<Instagram size={20} />} 
+                href="https://www.instagram.com/maxyelectabeats/"
+              />
+              <SocialIcon 
+                icon={<Twitter size={20} />} 
+                href="https://x.com/MaxyElectaBeats"
+              />
+              <SocialIcon 
+                icon={<Youtube size={20} />} 
+                href="https://www.youtube.com/@MaxyElectaBeats"
+              />
+              <SocialIcon 
+                icon={<Facebook size={20} />} 
+                href="https://www.facebook.com/profile.php?id=61577003585687"
+              />
             </div>
           </div>
           
@@ -81,8 +93,24 @@ const Footer: React.FC = () => {
   );
 };
 
-const SocialIcon: React.FC<{ icon: React.ReactNode }> = ({ icon }) => {
+const SocialIcon: React.FC<{ icon: React.ReactNode; href?: string }> = ({ icon, href }) => {
   const { isDarkMode } = useThemeStore();
+  
+  if (href) {
+    return (
+      <a 
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-primary-500 transition-colors duration-300 ${
+          isDarkMode ? 'bg-dark-800' : 'bg-gray-200'
+        }`}
+      >
+        {icon}
+      </a>
+    );
+  }
+  
   return (
     <a 
       href="#" 
