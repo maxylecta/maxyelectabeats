@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader, CreditCard } from 'lucide-react';
+import { X, Loader, CreditCard, Info } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
 import { getOrCreateSessionId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
@@ -252,6 +252,24 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                       : 'bg-white border-gray-300 text-gray-900 focus:border-primary-500'
                   } transition-colors duration-200`}
                 />
+              </div>
+
+              {/* PayPal Subscription Discount Notice */}
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode 
+                  ? 'bg-blue-500/10 border-blue-500/30' 
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <Info className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                    isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`} />
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                  }`}>
+                    To automatically receive your subscription discounts, use the exact same first name, last name, and email as your PayPal account when making your purchase.
+                  </p>
+                </div>
               </div>
 
               <div>
