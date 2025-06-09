@@ -66,7 +66,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
       console.log('Sending payload with session ID:', payload); // For debugging
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -75,13 +75,26 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process request');
+        // Get more detailed error information
+        let errorMessage = `HTTP ${response.status} ${response.statusText}`;
+        
+        try {
+          const errorData = await response.text();
+          if (errorData) {
+            errorMessage += `: ${errorData}`;
+          }
+        } catch (parseError) {
+          // If we can't parse the error response, just use the status
+          console.warn('Could not parse error response:', parseError);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       
       if (!data.checkout_url) {
-        throw new Error('No checkout URL received');
+        throw new Error('No checkout URL received from server');
       }
 
       // Store user info for future use
@@ -103,7 +116,25 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       window.location.href = data.checkout_url;
     } catch (error) {
       console.error('Submission error:', error);
-      toast.error('Failed to process request. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to process request. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('HTTP 4')) {
+          errorMessage = 'Invalid request. Please check your information and try again.';
+        } else if (error.message.includes('HTTP 5')) {
+          errorMessage = 'Server error. Please try again in a few moments.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('No checkout URL')) {
+          errorMessage = 'Payment processing error. Please try again.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
