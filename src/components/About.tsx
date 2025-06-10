@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Music, Rocket, PenTool as Tool, Calendar, MessageCircle, Instagram, Mail } from 'lucide-react';
+import { Music, Rocket, PenTool as Tool, Calendar, MessageCircle, Instagram, Mail, Zap, CreditCard, AlertTriangle } from 'lucide-react';
 
 const About: React.FC = () => {
   return (
@@ -49,6 +49,63 @@ const About: React.FC = () => {
               icon={<Calendar className="w-8 h-8 text-primary-500" />}
               title="The Future"
               content="Coming soon: the launch of Studio Connect, a physical and digital space for recording, collaborative creation, and premium services."
+            />
+
+            {/* New Subscription & Payment Section */}
+            <AboutSection
+              icon={<Zap className="w-8 h-8 text-warning-500" />}
+              title="⚡ IMPORTANT: Subscription & Payment — How to Keep Your Benefits"
+              content={
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-semibold text-warning-400 mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      Why Does This Matter?
+                    </h4>
+                    <p className="text-gray-300 mb-4">
+                      To make sure your subscriber discounts are automatically applied to every purchase, our system needs to recognize you.
+                    </p>
+                    <p className="text-gray-300 mb-4">
+                      Because we use PayPal and Stripe (credit card), there are two separate subscriber databases:
+                    </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
+                      <li>If you subscribe using <strong className="text-blue-400">PayPal</strong>, your subscription is recognized only through your PayPal account.</li>
+                      <li>If you subscribe using <strong className="text-purple-400">Stripe (credit/debit card)</strong>, your subscription is recognized only through your Stripe card or the email you used for Stripe.</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-warning-500/10 border border-warning-500/30 rounded-lg p-4">
+                    <p className="text-warning-300 font-medium">
+                      👉 Switching payment methods (for example, from PayPal to credit card, or the other way around) will prevent our system from recognizing your subscription, so your discounts and subscriber perks will not apply.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold text-success-400 mb-3 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5" />
+                      How Can I Make Sure I Get My Subscriber Benefits?
+                    </h4>
+                    <p className="text-gray-300 mb-3">When purchasing a beat or service:</p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
+                      <li>If you subscribed with <strong className="text-blue-400">PayPal</strong>, always pay with PayPal (same account/email).</li>
+                      <li>If you subscribed with <strong className="text-purple-400">Stripe</strong>, always pay with Stripe (same card/email).</li>
+                      <li>Do not use a different payment method than the one you used for your subscription.</li>
+                      <li>Make sure to use the same email address and/or account as when you subscribed.</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold text-error-400 mb-3">
+                      What Happens If I Change Payment Methods?
+                    </h4>
+                    <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
+                      <li>The system cannot automatically "link" your new payment to your existing subscription.</li>
+                      <li>Your discounts, VIP access, or exclusive downloads will not be applied to that purchase.</li>
+                      <li>If you want to switch payment methods for your subscription, contact our support — we can help transfer your subscription if needed.</li>
+                    </ul>
+                  </div>
+                </div>
+              }
             />
             
             <AboutSection
