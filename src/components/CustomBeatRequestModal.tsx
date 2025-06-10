@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Loader, Music2 } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
-import { getOrCreateSessionId } from '../utils/sessionUtils';
+import { getOrCreateSessionId, generateSaleId, generateUniqueId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
 
 interface CustomBeatRequestModalProps {
@@ -48,17 +48,32 @@ const CustomBeatRequestModal: React.FC<CustomBeatRequestModalProps> = ({ isOpen,
     setIsSubmitting(true);
 
     try {
+      // Generate unique identifiers for tracking
+      const saleId = generateSaleId(11); // e.g., "45223596136"
+      const actionId = generateUniqueId('custom_beat'); // e.g., "custom_beat_1703123456789_abc12345"
+      
       const payload = {
+        // Unique tracking identifiers
+        saleId: saleId,
+        actionId: actionId,
+        actionType: 'custom_beat_request',
+        
+        // Session and form data
         session_id: sessionId,
         ...formData,
         request_type: 'custom_beat',
-        timestamp: new Date().toISOString()
+        
+        // Metadata
+        timestamp: new Date().toISOString(),
+        source: 'maxy_electa_website'
       };
+
+      console.log('Sending custom beat request with tracking IDs:', { saleId, actionId, sessionId });
 
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

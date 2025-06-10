@@ -2,6 +2,7 @@ import React from 'react';
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import { motion } from 'framer-motion';
 import { Loader } from 'lucide-react';
+import { generateSaleId, generateUniqueId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
 
 interface PayPalSubscriptionButtonProps {
@@ -43,17 +44,27 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
 
   const onApprove = async (data: any, actions: any) => {
     try {
+      // Generate unique identifiers for tracking
+      const saleId = generateSaleId(11); // e.g., "45223596136"
+      const actionId = generateUniqueId('subscription'); // e.g., "subscription_1703123456789_abc12345"
+      
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
       // Send subscription data to your n8n webhook
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Basic ${credentials}`
         },
         body: JSON.stringify({
+          // Unique tracking identifiers
+          saleId: saleId,
+          actionId: actionId,
+          actionType: 'paypal_subscription',
+          
+          // PayPal data
           subscription_id: data.subscriptionID,
           plan_id: planId,
           plan_name: planName,
@@ -61,7 +72,11 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
           payment_method: 'paypal',
           status: 'active',
           payer_id: data.payerID,
-          order_id: data.orderID
+          order_id: data.orderID,
+          
+          // Metadata
+          timestamp: new Date().toISOString(),
+          source: 'maxy_electa_website'
         })
       });
 
@@ -69,11 +84,13 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
         throw new Error('Failed to process subscription');
       }
 
+      console.log('PayPal subscription processed with tracking IDs:', { saleId, actionId, subscriptionId: data.subscriptionID });
+
       toast.success('PayPal subscription activated successfully!');
       onSuccess?.(data.subscriptionID);
       
       // Redirect to success page with subscription details
-      window.location.href = `/success?subscription_id=${data.subscriptionID}&payment_method=paypal`;
+      window.location.href = `/success?subscription_id=${data.subscriptionID}&payment_method=paypal&sale_id=${saleId}`;
     } catch (error) {
       console.error('PayPal subscription error:', error);
       toast.error('Failed to activate subscription. Please contact support.');

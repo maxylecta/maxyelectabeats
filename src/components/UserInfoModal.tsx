@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader, CreditCard, Info } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
-import { getOrCreateSessionId } from '../utils/sessionUtils';
+import { getOrCreateSessionId, generateSaleId, generateUniqueId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
 
 interface UserInfoModalProps {
@@ -52,24 +52,39 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Generate unique identifiers for tracking
+      const saleId = generateSaleId(11); // e.g., "45223596136"
+      const actionId = generateUniqueId('purchase'); // e.g., "purchase_1703123456789_abc12345"
+      
       const payload = {
+        // Unique tracking identifiers
+        saleId: saleId,
+        actionId: actionId,
+        actionType: 'beat_purchase',
+        
+        // Session and user data
         session_id: sessionId,
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
         payment_method: formData.payment_method,
+        
+        // Purchase details
         beat_title: beatTitle,
         license: licenseType,
         price: price,
-        timestamp: new Date().toISOString()
+        
+        // Metadata
+        timestamp: new Date().toISOString(),
+        source: 'maxy_electa_website'
       };
 
-      console.log('Sending payload with session ID:', payload); // For debugging
+      console.log('Sending payload with tracking IDs:', { saleId, actionId, sessionId }); // For debugging
 
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,6 +124,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       // Store session info for potential use after redirect
       sessionStorage.setItem('last_payment_session', JSON.stringify({
         session_id: sessionId,
+        sale_id: saleId,
+        action_id: actionId,
         beat_title: beatTitle,
         license: licenseType,
         price: price,

@@ -1,5 +1,5 @@
 /**
- * Utility functions for session management
+ * Utility functions for session management and unique ID generation
  */
 
 /**
@@ -10,6 +10,28 @@ export const generateSessionId = (): string => {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 10);
   return `sess_${timestamp}_${randomString}`;
+};
+
+/**
+ * Generates a unique sale/action ID for tracking webhook calls
+ * Format: [prefix]_[timestamp]_[random8chars]
+ */
+export const generateUniqueId = (prefix: string = 'action'): string => {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 10);
+  return `${prefix}_${timestamp}_${randomString}`;
+};
+
+/**
+ * Generates a random numeric sale ID (similar to your example format)
+ * Returns a string of random digits with specified length
+ */
+export const generateSaleId = (length: number = 11): string => {
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += Math.floor(Math.random() * 10).toString();
+  }
+  return result;
 };
 
 /**
