@@ -53,7 +53,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose }) => {
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/15c87397-6707-42d1-b6a0-c322a592206a', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
