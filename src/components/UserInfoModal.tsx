@@ -66,10 +66,14 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
       console.log('Sending payload with session ID:', payload); // For debugging
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
+      // Create Basic Auth header
+      const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
+
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${credentials}`
         },
         body: JSON.stringify(payload)
       });

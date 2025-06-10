@@ -124,9 +124,16 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
     setIsTyping(true);
     
     try {
-      const response = await axios.post('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
+      // Create Basic Auth header
+      const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
+
+      const response = await axios.post('https://maxyelectazone.app.n8n.cloud/webhook-test/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         user_message: userMessage.text,
         session_id: sessionId
+      }, {
+        headers: {
+          'Authorization': `Basic ${credentials}`
+        }
       });
       
       // Log the full response for debugging
