@@ -36,7 +36,7 @@ const instrumentals: Instrumental[] = [
     id: "instr-002",
     title: "street corner",
     genre: "DRILL",
-    price: 3.00,
+    price: 9.99,
     audioSrc: "https://maxy-electa-beats.b-cdn.net/street%20corner.mp3",
     bpm: 72,
     length: "2:30",
