@@ -55,7 +55,7 @@ const CustomBeatRequestModal: React.FC<CustomBeatRequestModalProps> = ({ isOpen,
         timestamp: new Date().toISOString()
       };
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/62519f62-b8ce-4545-81a1-8735e10779e3', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

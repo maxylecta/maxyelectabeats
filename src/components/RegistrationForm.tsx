@@ -29,7 +29,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/15c87397-6707-42d1-b6a0-c322a592206a', {
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

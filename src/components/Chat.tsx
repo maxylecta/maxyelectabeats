@@ -124,7 +124,7 @@ const Chat: React.FC<ChatProps> = ({ className }) => {
     setIsTyping(true);
     
     try {
-      const response = await axios.post('https://maxyelectazone.app.n8n.cloud/webhook/12d94215-b7c2-4c79-9435-bcea4b859450', {
+      const response = await axios.post('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         user_message: userMessage.text,
         session_id: sessionId
       });
