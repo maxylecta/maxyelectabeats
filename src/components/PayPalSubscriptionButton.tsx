@@ -51,7 +51,7 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      // Send subscription data to your n8n webhook
+      // Send subscription data to your n8n webhook for processing
       const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
         method: 'POST',
         headers: {
@@ -82,6 +82,48 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
 
       if (!response.ok) {
         throw new Error('Failed to process subscription');
+      }
+
+      // Send welcome email notification to the CHECKOUT.ORDER.COMPLETED webhook
+      try {
+        await fetch('https://maxyelectazone.app.n8n.cloud/webhook/30ed453d-708a-4015-b94c-0d92c29ad215', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${credentials}`
+          },
+          body: JSON.stringify({
+            // Unique tracking identifiers
+            saleId: saleId,
+            actionId: generateUniqueId('welcome_email'),
+            actionType: 'checkout_order_completed',
+            
+            // Order completion data
+            subscription_id: data.subscriptionID,
+            plan_id: planId,
+            plan_name: planName,
+            price: price,
+            payment_method: 'paypal',
+            status: 'completed',
+            payer_id: data.payerID,
+            order_id: data.orderID,
+            
+            // Email trigger data
+            email_type: 'welcome_subscription',
+            customer_email: data.payerEmail || '', // PayPal should provide this
+            customer_name: data.payerName || '', // PayPal should provide this
+            
+            // Metadata
+            timestamp: new Date().toISOString(),
+            source: 'maxy_electa_website',
+            event_type: 'CHECKOUT.ORDER.COMPLETED'
+          })
+        });
+        
+        console.log('Welcome email webhook triggered successfully');
+      } catch (emailError) {
+        console.warn('Welcome email webhook failed, but subscription was successful:', emailError);
+        // Don't fail the entire process if email fails
       }
 
       console.log('PayPal subscription processed with tracking IDs:', { saleId, actionId, subscriptionId: data.subscriptionID });

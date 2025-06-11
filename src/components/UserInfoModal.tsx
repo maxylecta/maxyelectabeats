@@ -133,6 +133,49 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
         timestamp: new Date().toISOString()
       }));
 
+      // Trigger welcome email webhook for beat purchase completion
+      try {
+        await fetch('https://maxyelectazone.app.n8n.cloud/webhook/30ed453d-708a-4015-b94c-0d92c29ad215', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${credentials}`
+          },
+          body: JSON.stringify({
+            // Unique tracking identifiers
+            saleId: saleId,
+            actionId: generateUniqueId('purchase_email'),
+            actionType: 'checkout_order_completed',
+            
+            // Order completion data
+            beat_title: beatTitle,
+            license: licenseType,
+            price: price,
+            payment_method: formData.payment_method,
+            status: 'completed',
+            
+            // Customer data
+            customer_email: formData.email,
+            customer_name: `${formData.first_name} ${formData.last_name}`,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            
+            // Email trigger data
+            email_type: 'welcome_purchase',
+            
+            // Metadata
+            timestamp: new Date().toISOString(),
+            source: 'maxy_electa_website',
+            event_type: 'CHECKOUT.ORDER.COMPLETED'
+          })
+        });
+        
+        console.log('Purchase welcome email webhook triggered successfully');
+      } catch (emailError) {
+        console.warn('Welcome email webhook failed, but purchase processing continues:', emailError);
+        // Don't fail the entire process if email fails
+      }
+
       // Redirect to checkout
       window.location.href = data.checkout_url;
     } catch (error) {
