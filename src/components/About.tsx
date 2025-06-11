@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Music, Rocket, PenTool as Tool, Calendar, MessageCircle, Instagram, Mail, Zap, CreditCard, AlertTriangle } from 'lucide-react';
+import { Music, Rocket, PenTool as Tool, Calendar, MessageCircle, Instagram, Mail, Zap, CreditCard, AlertTriangle, User, CheckCircle } from 'lucide-react';
 
 const About: React.FC = () => {
   return (
@@ -103,6 +103,37 @@ const About: React.FC = () => {
                       <li>Your discounts, VIP access, or exclusive downloads will not be applied to that purchase.</li>
                       <li>If you want to switch payment methods for your subscription, contact our support — we can help transfer your subscription if needed.</li>
                     </ul>
+                  </div>
+
+                  {/* Real-Life Example */}
+                  <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold text-primary-400 mb-3 flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Real-Life Example
+                    </h4>
+                    <p className="text-gray-300 mb-3">
+                      If Max subscribes with PayPal using <strong className="text-blue-400">maxmusic@gmail.com</strong> and then tries to buy a beat using <strong className="text-purple-400">Stripe (credit card)</strong>, he won't see his 30% discount: the system can\'t find his subscription in the Stripe database.
+                    </p>
+                    <p className="text-gray-300">
+                      On the other hand, if he always pays with the same PayPal account, the discount applies automatically.
+                    </p>
+                  </div>
+
+                  {/* TL;DR Summary */}
+                  <div className="bg-success-500/10 border border-success-500/30 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold text-success-400 mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      TL;DR (Summary)
+                    </h4>
+                    <p className="text-gray-300 mb-3 font-medium">
+                      Always use the same payment method to keep your benefits active!
+                    </p>
+                    <p className="text-gray-300 mb-3">
+                      If you want to switch, contact us first to avoid losing your perks.
+                    </p>
+                    <p className="text-gray-300">
+                      Thanks for understanding and supporting independent music! 🎧
+                    </p>
                   </div>
                 </div>
               }
