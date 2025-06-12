@@ -51,8 +51,8 @@ const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> = ({
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      // Send subscription data to your n8n webhook for processing
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
+      // Send subscription data to your n8n webhook for processing (PRODUCTION URL)
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

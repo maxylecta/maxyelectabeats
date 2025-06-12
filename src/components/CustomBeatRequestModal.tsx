@@ -73,7 +73,8 @@ const CustomBeatRequestModal: React.FC<CustomBeatRequestModalProps> = ({ isOpen,
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook-test/12d94215-b7c2-4c79-9435-bcea4b859450', {
+      // Use the PRODUCTION webhook URL for custom beat requests
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/62519f62-b8ce-4545-81a1-8735e10779e3', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

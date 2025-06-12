@@ -74,9 +74,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
         license: licenseType,
         price: price,
         
-        // Stripe configuration for beat purchases
-        payment_method_types: ['card', 'link'], // This ensures both options are available
-        
         // Metadata
         timestamp: new Date().toISOString(),
         source: 'maxy_electa_website'
@@ -87,8 +84,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      // Use the production webhook endpoint
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
+      // Use the PRODUCTION webhook URL for beat purchases and licenses
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -322,24 +319,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 />
               </div>
 
-              {/* PayPal Subscription Discount Notice */}
-              <div className={`p-4 rounded-lg border ${
-                isDarkMode 
-                  ? 'bg-blue-500/10 border-blue-500/30' 
-                  : 'bg-blue-50 border-blue-200'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <Info className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                    isDarkMode ? 'text-blue-400' : 'text-blue-600'
-                  }`} />
-                  <p className={`text-sm ${
-                    isDarkMode ? 'text-blue-300' : 'text-blue-700'
-                  }`}>
-                    To automatically receive your subscription discounts, use the exact same first name, last name, and email as your PayPal account when making your purchase.
-                  </p>
-                </div>
-              </div>
-
               <div>
                 <label 
                   className={`block text-sm font-medium mb-3 ${
@@ -373,7 +352,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     <span className={`text-xs ${
                       formData.payment_method === 'stripe' ? 'text-blue-400' : isDarkMode ? 'text-gray-500' : 'text-gray-500'
                     }`}>
-                      (Card + Link)
+                      (Card)
                     </span>
                   </motion.button>
 
@@ -410,6 +389,24 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                       (PayPal)
                     </span>
                   </motion.button>
+                </div>
+              </div>
+
+              {/* PayPal Subscription Discount Notice */}
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode 
+                  ? 'bg-blue-500/10 border-blue-500/30' 
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <Info className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                    isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`} />
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                  }`}>
+                    To automatically receive your subscription discounts, use the exact same first name, last name, and email as your PayPal account when making your purchase.
+                  </p>
                 </div>
               </div>
 
