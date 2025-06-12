@@ -74,6 +74,9 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
         license: licenseType,
         price: price,
         
+        // Stripe configuration for beat purchases
+        payment_method_types: ['card', 'link'], // This ensures both options are available
+        
         // Metadata
         timestamp: new Date().toISOString(),
         source: 'maxy_electa_website'
@@ -84,7 +87,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       // Create Basic Auth header
       const credentials = btoa('WBK5Pwbk5p:174747m3dWBK5P');
 
-      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/a6ec851f-5f94-44a5-9b2b-6bcfe37c4f98', {
+      // Use the production webhook endpoint
+      const response = await fetch('https://maxyelectazone.app.n8n.cloud/webhook/6d5c6048-7f93-4616-93dd-0e6b93f5ee49', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -369,7 +373,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     <span className={`text-xs ${
                       formData.payment_method === 'stripe' ? 'text-blue-400' : isDarkMode ? 'text-gray-500' : 'text-gray-500'
                     }`}>
-                      (Card)
+                      (Card + Link)
                     </span>
                   </motion.button>
 
