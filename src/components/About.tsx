@@ -51,57 +51,47 @@ const About: React.FC = () => {
               content="Coming soon: the launch of Studio Connect, a physical and digital space for recording, collaborative creation, and premium services."
             />
 
-            {/* New Subscription & Payment Section */}
+            {/* Updated Subscription & Payment Section - Stripe Only */}
             <AboutSection
               icon={<Zap className="w-8 h-8 text-warning-500" />}
-              title="⚡ IMPORTANT: Subscription & Payment — How to Keep Your Benefits"
+              title="⚡ IMPORTANT: Subscription & Payment Information"
               content={
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-semibold text-warning-400 mb-3 flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5" />
-                      Why Does This Matter?
+                      Payment Processing
                     </h4>
                     <p className="text-gray-300 mb-4">
-                      To make sure your subscriber discounts are automatically applied to every purchase, our system needs to recognize you.
+                      All payments are securely processed through Stripe, ensuring your financial information is protected with industry-leading security standards.
                     </p>
-                    <p className="text-gray-300 mb-4">
-                      Because we use PayPal and Stripe (credit card), there are two separate subscriber databases:
-                    </p>
-                    <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
-                      <li>If you subscribe using <strong className="text-blue-400">PayPal</strong>, your subscription is recognized only through your PayPal account.</li>
-                      <li>If you subscribe using <strong className="text-purple-400">Stripe (credit/debit card)</strong>, your subscription is recognized only through your Stripe card or the email you used for Stripe.</li>
-                    </ul>
                   </div>
 
-                  <div className="bg-warning-500/10 border border-warning-500/30 rounded-lg p-4">
-                    <p className="text-warning-300 font-medium">
-                      👉 Switching payment methods (for example, from PayPal to credit card, or the other way around) will prevent our system from recognizing your subscription, so your discounts and subscriber perks will not apply.
+                  <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold text-primary-400 mb-3 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5" />
+                      Subscription Benefits
+                    </h4>
+                    <p className="text-gray-300 mb-3">
+                      Subscribe to automatically receive discounts on all beat purchases:
                     </p>
+                    <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
+                      <li><strong className="text-success-400">BASIC</strong>: 20% off all beats</li>
+                      <li><strong className="text-secondary-400">PRO</strong>: 30% off all beats</li>
+                      <li><strong className="text-accent-400">PREMIUM</strong>: 40% off all beats</li>
+                    </ul>
                   </div>
 
                   <div>
                     <h4 className="text-lg font-semibold text-success-400 mb-3 flex items-center gap-2">
-                      <CreditCard className="w-5 h-5" />
-                      How Can I Make Sure I Get My Subscriber Benefits?
+                      <CheckCircle className="w-5 h-5" />
+                      How Discounts Work
                     </h4>
-                    <p className="text-gray-300 mb-3">When purchasing a beat or service:</p>
+                    <p className="text-gray-300 mb-3">When purchasing beats:</p>
                     <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
-                      <li>If you subscribed with <strong className="text-blue-400">PayPal</strong>, always pay with PayPal (same account/email).</li>
-                      <li>If you subscribed with <strong className="text-purple-400">Stripe</strong>, always pay with Stripe (same card/email).</li>
-                      <li>Do not use a different payment method than the one you used for your subscription.</li>
-                      <li>Make sure to use the same email address and/or account as when you subscribed.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg font-semibold text-error-400 mb-3">
-                      What Happens If I Change Payment Methods?
-                    </h4>
-                    <ul className="space-y-2 list-disc list-inside text-gray-300 ml-4">
-                      <li>The system cannot automatically "link" your new payment to your existing subscription.</li>
-                      <li>Your discounts, VIP access, or exclusive downloads will not be applied to that purchase.</li>
-                      <li>If you want to switch payment methods for your subscription, contact our support — we can help transfer your subscription if needed.</li>
+                      <li>Use the same email address for both subscription and beat purchases</li>
+                      <li>Discounts are automatically applied at checkout</li>
+                      <li>All payments processed securely through Stripe</li>
                     </ul>
                   </div>
 
@@ -109,13 +99,10 @@ const About: React.FC = () => {
                   <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-4">
                     <h4 className="text-lg font-semibold text-primary-400 mb-3 flex items-center gap-2">
                       <User className="w-5 h-5" />
-                      Real-Life Example
+                      Example
                     </h4>
                     <p className="text-gray-300 mb-3">
-                      If Max subscribes with PayPal using <strong className="text-blue-400">maxmusic@gmail.com</strong> and then tries to buy a beat using <strong className="text-purple-400">Stripe (credit card)</strong>, he won't see his 30% discount: the system can\'t find his subscription in the Stripe database.
-                    </p>
-                    <p className="text-gray-300">
-                      On the other hand, if he always pays with the same PayPal account, the discount applies automatically.
+                      If Max subscribes to PRO using <strong className="text-primary-400">maxmusic@gmail.com</strong> and then purchases a beat using the same email, he automatically receives his 30% discount at checkout.
                     </p>
                   </div>
 
@@ -126,13 +113,13 @@ const About: React.FC = () => {
                       TL;DR (Summary)
                     </h4>
                     <p className="text-gray-300 mb-3 font-medium">
-                      Always use the same payment method to keep your benefits active!
+                      Subscribe → Use same email for purchases → Get automatic discounts!
                     </p>
                     <p className="text-gray-300 mb-3">
-                      If you want to switch, contact us first to avoid losing your perks.
+                      All payments are secure and processed through Stripe.
                     </p>
                     <p className="text-gray-300">
-                      Thanks for understanding and supporting independent music! 🎧
+                      Thanks for supporting independent music! 🎧
                     </p>
                   </div>
                 </div>

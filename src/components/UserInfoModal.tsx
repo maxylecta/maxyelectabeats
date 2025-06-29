@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader, CreditCard, Info } from 'lucide-react';
+import { X, Loader, CreditCard } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
 import { getOrCreateSessionId, generateSaleId, generateUniqueId } from '../utils/sessionUtils';
 import toast from 'react-hot-toast';
@@ -28,8 +28,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
   const [formData, setFormData] = useState({
     first_name: localStorage.getItem('user_first_name') || '',
     last_name: localStorage.getItem('user_last_name') || '',
-    email: localStorage.getItem('user_email') || '',
-    payment_method: '' as 'stripe' | 'paypal' | ''
+    email: localStorage.getItem('user_email') || ''
   });
 
   // Generate or retrieve session ID when modal opens
@@ -43,12 +42,6 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.payment_method) {
-      toast.error('Please select a payment method');
-      return;
-    }
-    
     setIsSubmitting(true);
 
     try {
@@ -67,7 +60,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
-        payment_method: formData.payment_method,
+        payment_method: 'stripe', // Only Stripe now
         
         // Purchase details
         beat_title: beatTitle,
@@ -130,7 +123,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
         beat_title: beatTitle,
         license: licenseType,
         price: price,
-        payment_method: formData.payment_method,
+        payment_method: 'stripe',
         timestamp: new Date().toISOString()
       }));
 
@@ -152,7 +145,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
             beat_title: beatTitle,
             license: licenseType,
             price: price,
-            payment_method: formData.payment_method,
+            payment_method: 'stripe',
             status: 'completed',
             
             // Customer data
@@ -319,101 +312,30 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                 />
               </div>
 
+              {/* Payment Method Display (Stripe Only) */}
               <div>
                 <label 
                   className={`block text-sm font-medium mb-3 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}
                 >
-                  Payment Method <span className="text-primary-500">*</span>
+                  Payment Method
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setFormData(prev => ({ ...prev, payment_method: 'stripe' }))}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                      formData.payment_method === 'stripe'
-                        ? 'border-blue-500 bg-blue-500/10'
-                        : isDarkMode
-                          ? 'border-dark-700 hover:border-blue-500/50 bg-dark-800'
-                          : 'border-gray-300 hover:border-blue-500/50 bg-white'
-                    }`}
-                  >
-                    <CreditCard className={`w-6 h-6 ${
-                      formData.payment_method === 'stripe' ? 'text-blue-500' : isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`} />
-                    <span className={`text-sm font-medium ${
-                      formData.payment_method === 'stripe' ? 'text-blue-500' : isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Pay by Stripe
-                    </span>
-                    <span className={`text-xs ${
-                      formData.payment_method === 'stripe' ? 'text-blue-400' : isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                    }`}>
-                      (Card)
-                    </span>
-                  </motion.button>
-
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setFormData(prev => ({ ...prev, payment_method: 'paypal' }))}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                      formData.payment_method === 'paypal'
-                        ? 'border-yellow-500 bg-yellow-500/10'
-                        : isDarkMode
-                          ? 'border-dark-700 hover:border-yellow-500/50 bg-dark-800'
-                          : 'border-gray-300 hover:border-yellow-500/50 bg-white'
-                    }`}
-                  >
-                    <div className={`w-6 h-6 rounded font-bold text-xs flex items-center justify-center ${
-                      formData.payment_method === 'paypal' 
-                        ? 'bg-yellow-500 text-white' 
-                        : isDarkMode 
-                          ? 'bg-gray-600 text-gray-300' 
-                          : 'bg-gray-400 text-white'
-                    }`}>
-                      PP
-                    </div>
-                    <span className={`text-sm font-medium ${
-                      formData.payment_method === 'paypal' ? 'text-yellow-500' : isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Pay by PayPal
-                    </span>
-                    <span className={`text-xs ${
-                      formData.payment_method === 'paypal' ? 'text-yellow-400' : isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                    }`}>
-                      (PayPal)
-                    </span>
-                  </motion.button>
-                </div>
-              </div>
-
-              {/* PayPal Subscription Discount Notice */}
-              <div className={`p-4 rounded-lg border ${
-                isDarkMode 
-                  ? 'bg-blue-500/10 border-blue-500/30' 
-                  : 'bg-blue-50 border-blue-200'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <Info className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                    isDarkMode ? 'text-blue-400' : 'text-blue-600'
-                  }`} />
-                  <p className={`text-sm ${
-                    isDarkMode ? 'text-blue-300' : 'text-blue-700'
-                  }`}>
-                    To automatically receive your subscription discounts, use the exact same first name, last name, and email as your PayPal account when making your purchase.
-                  </p>
+                <div className={`p-4 rounded-lg border-2 border-blue-500 bg-blue-500/10 flex items-center gap-3`}>
+                  <CreditCard className="w-6 h-6 text-blue-500" />
+                  <div>
+                    <span className="text-blue-500 font-medium">Stripe</span>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Secure credit card processing
+                    </p>
+                  </div>
                 </div>
               </div>
 
               <motion.button
                 whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                 whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                disabled={isSubmitting || !formData.payment_method}
+                disabled={isSubmitting}
                 className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
@@ -422,7 +344,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     <span>Processing...</span>
                   </>
                 ) : (
-                  'Continue to Payment'
+                  'Continue to Stripe Checkout'
                 )}
               </motion.button>
             </form>
