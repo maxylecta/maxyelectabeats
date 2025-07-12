@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Crown, Check, HelpCircle } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
+import { useAuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import UserInfoModal from './UserInfoModal';
+import AuthModal from './AuthModal';
 
 interface LicenseModalProps {
   isOpen: boolean;
@@ -14,10 +16,21 @@ interface LicenseModalProps {
 
 const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle, basePrice }) => {
   const { isDarkMode } = useThemeStore();
+  const { user, getDiscountPercentage } = useAuthContext();
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedLicense, setSelectedLicense] = useState<'commercial' | 'exclusive' | null>(null);
 
+  const discountPercentage = getDiscountPercentage();
+  const discountedPrice = basePrice * (1 - discountPercentage / 100);
+  const exclusiveDiscountedPrice = (basePrice * 2) * (1 - discountPercentage / 100);
+
   const handlePurchase = (type: 'commercial' | 'exclusive') => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setSelectedLicense(type);
     setShowUserInfoModal(true);
   };
@@ -53,6 +66,11 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
                   <p className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     For beat: {beatTitle}
                   </p>
+                  {discountPercentage > 0 && (
+                    <p className="mt-1 text-success-400 font-medium">
+                      🎉 Your subscription saves you {discountPercentage}% on this purchase!
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={onClose}
@@ -82,8 +100,13 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
                       Commercial License
                     </h3>
                     <div className="flex items-baseline gap-2 mb-4">
+                      {discountPercentage > 0 && (
+                        <span className="text-lg text-gray-500 line-through">
+                          ${basePrice.toFixed(2)}
+                        </span>
+                      )}
                       <span className="text-3xl font-bold">
-                        ${basePrice}
+                        ${discountedPrice.toFixed(2)}
                       </span>
                       <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                         one-time
@@ -150,8 +173,13 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
                         <Crown className="text-accent-500" size={24} />
                       </h3>
                       <div className="flex items-baseline gap-2 mb-4">
+                        {discountPercentage > 0 && (
+                          <span className="text-lg text-gray-500 line-through">
+                            ${(basePrice * 2).toFixed(2)}
+                          </span>
+                        )}
                         <span className="text-3xl font-bold">
-                          ${basePrice * 2}
+                          ${exclusiveDiscountedPrice.toFixed(2)}
                         </span>
                         <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                           one-time
@@ -220,10 +248,16 @@ const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose, beatTitle,
       <UserInfoModal
         isOpen={showUserInfoModal}
         onClose={() => setShowUserInfoModal(false)}
-        onSubmit={() => {}} // This is no longer used since we handle the redirect in UserInfoModal
+        onSubmit={() => {}}
         beatTitle={beatTitle}
         licenseType={selectedLicense || 'commercial'}
-        price={selectedLicense === 'exclusive' ? basePrice * 2 : basePrice}
+        price={selectedLicense === 'exclusive' ? exclusiveDiscountedPrice : discountedPrice}
+      />
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode="signin"
       />
     </>
   );
